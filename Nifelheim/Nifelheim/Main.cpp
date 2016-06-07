@@ -1,11 +1,24 @@
-#include <SDL.h>
+#include "Core.h"
+#include "DebugLogger.h"
+#include <SDL_events.h>
 
 int main(int argc, char** argv)
 {
-	SDL_Init(SDL_INIT_VIDEO);
+	Core::CreateInstance();
+	Core::GetInstance()->Init(800, 600, false);
 
-	// game code eventually goes here
+	Mesh m = Core::GetMeshManager()->LoadMesh("cube.obj");
+	SDL_Event ev;
 	
-	SDL_Quit();
+	while(true)
+	{
+		SDL_PollEvent(&ev);
+		if (ev.type == SDL_KEYDOWN)
+			break;
+		Core::GetDirect3D11()->Draw();
+	}
+	Core::GetInstance()->ShutDown();
+	DebugLogger::Dump();
+
 	return 0;
 }
