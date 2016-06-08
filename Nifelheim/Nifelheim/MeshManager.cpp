@@ -14,17 +14,17 @@ MeshManager::~MeshManager()
 {
 }
 
-Mesh MeshManager::LoadMesh(const std::string & filename)
+int MeshManager::LoadMesh(const std::string & filename)
 {
-	auto exists = _filenameToMesh.find(filename);
-	if (exists != _filenameToMesh.end())
+	auto exists = _filenameToIndex.find(filename);
+	if (exists != _filenameToIndex.end())
 		return exists->second;
 
 	std::ifstream fin(filename);
 	if (!fin.is_open())
 	{
 		DebugLogger::AddMsg("Could not find file: " + filename);
-		return Mesh();
+		return -1;
 	}
 
 	std::vector<XMFLOAT3> positions;
@@ -84,7 +84,7 @@ Mesh MeshManager::LoadMesh(const std::string & filename)
 	else
 	{
 		DebugLogger::AddMsg("Unknown file format: " + filename);
-		return Mesh();
+		return -1;
 	}
 
 	std::vector<XMFLOAT3> realPos;
@@ -190,8 +190,8 @@ Mesh MeshManager::LoadMesh(const std::string & filename)
 		finishedVertices[i].texcoord = realTex[i];
 	}
 	Mesh mesh;
-	mesh.vertexBuffer = Core::GetDirect3D11()->CreateVertexBuffer(&finishedVertices[0], finishedVertices.size());
+	mesh.vertexBuffer = Core::GetInstance()->GetDirect3D11()->CreateVertexBuffer(&finishedVertices[0], finishedVertices.size());
+	_meshes.push_back(mesh);
 
-
-	return mesh;
+	return _meshes.size() - 1;
 }

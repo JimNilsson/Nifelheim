@@ -11,10 +11,11 @@ Direct3D11::Direct3D11()
 {
 	DXGI_SWAP_CHAIN_DESC scd;
 	ZeroMemory(&scd, sizeof(scd));
+	const Core const* core = Core::GetInstance();
 	scd.BufferCount = 1;
 	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	scd.OutputWindow = Core::GetWindow()->GetHandle();
+	scd.OutputWindow = core->GetWindow()->GetHandle();
 	scd.SampleDesc.Count = 1; //We will be using deferred lighting
 	scd.Windowed = TRUE; //Why BOOL is an int is probably related to working in C
 	
@@ -25,8 +26,8 @@ Direct3D11::Direct3D11()
 	////Set up GBuffers for deferred shading
 	D3D11_TEXTURE2D_DESC td;
 	ZeroMemory(&td, sizeof(td));
-	td.Width = Core::GetWindow()->GetWidth();
-	td.Height = Core::GetWindow()->GetHeight();
+	td.Width = core->GetWindow()->GetWidth();
+	td.Height = core->GetWindow()->GetHeight();
 	td.MipLevels = 1;
 	td.ArraySize = 1;
 	td.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -196,6 +197,7 @@ int Direct3D11::CreateIndexBuffer(unsigned * indexData, unsigned indexCount)
 
 void Direct3D11::Draw()
 {
+	const Core const * core = Core::GetInstance();
 	float clearColor[] = { 0.0f,0.0f,0.0f,0.0f };
 
 	for (auto &rtv : _renderTargetViews)
@@ -216,7 +218,7 @@ void Direct3D11::Draw()
 	_deviceContext->OMSetRenderTargets(RenderTargets::RT_COUNT, &_renderTargetViews[0], _depth.DSV);
 	
 	PerFrameBuffer pfb;
-	Core::GetCameraManager()->FillPerFrameBuffer(pfb);
+	core->GetCameraManager()->FillPerFrameBuffer(pfb);
 	
 	_deviceContext->Draw(36, 0);
 
@@ -266,10 +268,11 @@ void Direct3D11::_CreateShadersAndInputLayouts()
 
 void Direct3D11::_CreateDepthBuffer()
 {
+	const Core const* core = Core::GetInstance();
 	D3D11_TEXTURE2D_DESC dsd;
 	ZeroMemory(&dsd, sizeof(dsd));
-	dsd.Width = Core::GetWindow()->GetWidth();
-	dsd.Height = Core::GetWindow()->GetHeight();
+	dsd.Width = core->GetWindow()->GetWidth();
+	dsd.Height = core->GetWindow()->GetHeight();
 	dsd.MipLevels = 1;
 	dsd.ArraySize = 1;
 	dsd.Format = DXGI_FORMAT_R24G8_TYPELESS;
@@ -319,9 +322,10 @@ void Direct3D11::_CreateSamplerState()
 
 void Direct3D11::_CreateViewPort()
 {
+	const Core const* core = Core::GetInstance();
 	D3D11_VIEWPORT vp;
-	vp.Width = Core::GetWindow()->GetWidth();
-	vp.Height = Core::GetWindow()->GetHeight();
+	vp.Width = core->GetWindow()->GetWidth();
+	vp.Height = core->GetWindow()->GetHeight();
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
 	vp.TopLeftX = 0.0f;

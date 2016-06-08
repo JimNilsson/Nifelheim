@@ -27,14 +27,21 @@ struct Mesh
 	int indexCount = -1;
 };
 
-struct Transform
+struct TransformCache
 {
-	Transform()
+	TransformCache()
 	{
 		DirectX::XMStoreFloat4x4(&world, DirectX::XMMatrixIdentity());
 	}
-	~Transform() {}
+	~TransformCache() {}
 	DirectX::XMFLOAT4X4 world;
+};
+
+struct Transform
+{
+	DirectX::XMFLOAT3 translation;
+	DirectX::XMFLOAT3 rotation;
+	DirectX::XMFLOAT3 scale;
 };
 
 struct Material
@@ -78,6 +85,31 @@ struct Renderable
 	Transform transform;
 	Material material;
 	Textures textures;
+};
+
+enum Components
+{
+	TRANSFORM,
+	MESH,
+	MATERIAL,
+	COMPONENT_COUNT
+};
+
+class GameObject
+{
+public:
+	unsigned id;
+	int components[Components::COMPONENT_COUNT] = { -1 };
+	GameObject()
+	{
+		id = GameObject::GenerateID();
+	}
+private:
+	static int GenerateID()
+	{
+		static unsigned oid = 0;
+		return oid++;
+	}
 };
 
 

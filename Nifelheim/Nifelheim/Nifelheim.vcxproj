@@ -123,6 +123,7 @@
     <ClCompile Include="Direct3D11.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MeshManager.cpp" />
+    <ClCompile Include="TransformManager.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -133,6 +134,7 @@
     <ClInclude Include="Macros.h" />
     <ClInclude Include="MeshManager.h" />
     <ClInclude Include="Structs.h" />
+    <ClInclude Include="TransformManager.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>

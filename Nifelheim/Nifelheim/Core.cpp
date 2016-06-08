@@ -31,6 +31,8 @@ void Core::ShutDown()
 	SAFE_DELETE(Core::GetInstance()->_d3d11);
 	SAFE_DELETE(Core::GetInstance()->_meshManager);
 	SAFE_DELETE(Core::GetInstance()->_cameraManager);
+	delete _instance;
+	_instance = nullptr;
 }
 
 void Core::Init(uint32_t width, uint32_t height, bool fullscreen)
@@ -42,22 +44,28 @@ void Core::Init(uint32_t width, uint32_t height, bool fullscreen)
 
 }
 
-Window * Core::GetWindow()
+Window * Core::GetWindow() const
 {
 	return Core::GetInstance()->_window;
 }
 
-Direct3D11 * Core::GetDirect3D11()
+Direct3D11 * Core::GetDirect3D11() const
 {
 	return Core::GetInstance()->_d3d11;
 }
 
-MeshManager * Core::GetMeshManager()
+MeshManager * Core::GetMeshManager() const
 {
 	return Core::GetInstance()->_meshManager;
 }
 
-CameraManager * Core::GetCameraManager()
+CameraManager * Core::GetCameraManager() const
 {
 	return Core::GetInstance()->_cameraManager;
+}
+
+ObjectID Core::CreateGameObject()
+{
+	Core::GetInstance()->_gameObjects.push_back(GameObject());
+	return Core::GetInstance()->_gameObjects.back().id;
 }
