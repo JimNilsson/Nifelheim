@@ -23,7 +23,7 @@ const unsigned TransformManager::CreateTransform(float posX, float posY, float p
 	
 	
 	XMMATRIX t = XMMatrixTranslation(posX, posY, posZ);
-	XMMATRIX r = XMMatrixRotationRollPitchYaw(rotX, rotY, rotZ);
+	XMMATRIX r = XMMatrixRotationRollPitchYaw(rotZ, rotX, rotY);
 	XMMATRIX s = XMMatrixScaling(scaleX, scaleY, scaleZ);
 	XMMATRIX world = s*r*t;
 
@@ -188,6 +188,11 @@ void TransformManager::SetTranslation(unsigned id, float x, float y, float z)
 void TransformManager::BindChild(unsigned parent, unsigned child, bool bindTranslation, bool bindRotation, bool bindScale)
 {
 	_transforms[parent].children.push_back(ChildTransform(child, bindTranslation, bindRotation, bindScale));
+}
+
+const TransformCache & TransformManager::GetTransformBuffer(unsigned id) const
+{
+	return _transformCache[id];
 }
 
 void TransformManager::_UpdateCache(unsigned id)

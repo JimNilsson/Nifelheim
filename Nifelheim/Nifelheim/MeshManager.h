@@ -12,6 +12,7 @@ public:
 	MeshManager();
 	~MeshManager();
 	int LoadMesh(const std::string& filename);
+	const Mesh& GetMesh(unsigned id) const;
 private:
 	std::unordered_map<std::string, int> _filenameToIndex;
 	std::vector<Mesh> _meshes;

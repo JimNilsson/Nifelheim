@@ -25,6 +25,7 @@ struct Mesh
 	int vertexBuffer = -1;
 	int indexBuffer = -1;
 	int indexCount = -1;
+	int vertexCount = -1;
 };
 
 struct TransformCache
@@ -98,12 +99,13 @@ struct PerFrameBuffer
 	DirectX::XMFLOAT4 CamPos;
 };
 
-struct Renderable
+struct PerObjectBuffer
 {
-	Mesh mesh;
-	Transform transform;
-	Material material;
-	Textures textures;
+	DirectX::XMFLOAT4X4 WVP;
+	DirectX::XMFLOAT4X4 WorldViewInvTrp;
+	DirectX::XMFLOAT4X4 World;
+	DirectX::XMFLOAT4X4 WorldView;
+	DirectX::XMFLOAT4X4 WorldInvTrp;
 };
 
 enum Components

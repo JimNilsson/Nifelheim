@@ -45,6 +45,8 @@ public:
 		float rotX, float rotY, float rotZ,
 		float scaleX, float scaleY, float scaleZ);
 
+	const std::vector<GameObject>& GetGameObjects() const;
+
 
 
 

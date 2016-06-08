@@ -10,9 +10,9 @@ int main(int argc, char** argv)
 
 	SDL_Event ev;
 	
-	core->CreateGameObject();
 	ObjectID cube = core->CreateGameObject();
 	core->GiveMesh(cube, "cube.obj");
+	core->GiveTransform(cube, 0, 0, 2.0f, 0.0f, 0.0f, 0.0f, 2.0f, 2.0f, 2.0f);
 	int p = 5;
 	const int& k = p;
 	p = 4;
@@ -23,6 +23,7 @@ int main(int argc, char** argv)
 		if (ev.type == SDL_KEYDOWN)
 			break;
 		core->GetDirect3D11()->Draw();
+		core->GetTransformManager()->Rotate(0, 0.0f, 0.00003f, 0.0f);
 	}
 	Core::ShutDown();
 	DebugLogger::Dump();

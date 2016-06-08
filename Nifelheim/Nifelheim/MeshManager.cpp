@@ -191,7 +191,13 @@ int MeshManager::LoadMesh(const std::string & filename)
 	}
 	Mesh mesh;
 	mesh.vertexBuffer = Core::GetInstance()->GetDirect3D11()->CreateVertexBuffer(&finishedVertices[0], finishedVertices.size());
+	mesh.vertexCount = finishedVertices.size();
 	_meshes.push_back(mesh);
 
 	return _meshes.size() - 1;
+}
+
+const Mesh & MeshManager::GetMesh(unsigned id) const
+{
+	return _meshes[id];
 }

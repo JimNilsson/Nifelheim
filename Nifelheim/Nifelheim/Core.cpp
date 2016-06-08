@@ -34,7 +34,7 @@ unsigned Core::FindObjectIndex(ObjectID id)
 			index = (lower + upper) / 2;
 		}
 	}
-	return lower != upper ? index : -1;
+	return _gameObjects[index].id == id ? index : -1;
 }
 void Core::CreateInstance()
 {
@@ -122,4 +122,9 @@ void Core::GiveTransform(ObjectID gameObject, float posX, float posY, float posZ
 	{
 		DebugLogger::AddMsg("Couldn't find gameobject to give transform to...");
 	}
+}
+
+const std::vector<GameObject>& Core::GetGameObjects() const
+{
+	return _gameObjects;
 }

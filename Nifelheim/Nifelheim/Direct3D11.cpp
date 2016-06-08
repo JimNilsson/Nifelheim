@@ -1,11 +1,10 @@
 #include "Direct3D11.h"
 #include "Core.h"
 #include "DebugLogger.h"
+#include "Structs.h"
 #include <exception>
 
-
-
-
+using namespace DirectX;
 
 Direct3D11::Direct3D11()
 {
@@ -74,6 +73,7 @@ Direct3D11::Direct3D11()
 	_CreateSamplerState();
 	_CreateViewPort();
 	_CreateRasterizerState();
+	_CreateConstantBuffers();
 }
 
 Direct3D11::~Direct3D11()
@@ -211,7 +211,6 @@ void Direct3D11::Draw()
 	_deviceContext->IASetInputLayout(_inputLayouts[InputLayouts::IL_STATIC_MESHES]);
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
-	_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[0], &stride, &offset);
 	_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	_deviceContext->VSSetShader(_vertexShaders[VertexShaders::VS_STATIC_MESHES], nullptr, 0);
 	_deviceContext->PSSetShader(_pixelShaders[PixelShaders::PS_STATIC_MESHES], nullptr, 0);
@@ -219,8 +218,42 @@ void Direct3D11::Draw()
 	
 	PerFrameBuffer pfb;
 	core->GetCameraManager()->FillPerFrameBuffer(pfb);
-	
-	_deviceContext->Draw(36, 0);
+	D3D11_MAPPED_SUBRESOURCE mappedSubres;
+	_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_PER_FRAME], 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubres);
+	memcpy(mappedSubres.pData, &pfb, sizeof(pfb));
+	_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_FRAME], 0);
+	_deviceContext->VSSetConstantBuffers(0, 1, &_constantBuffers[ConstantBuffers::CB_PER_FRAME]);
+
+	const std::vector<GameObject>& gameObjects = core->GetGameObjects();
+	for (auto object : gameObjects)
+	{
+		Mesh m = core->GetMeshManager()->GetMesh(object.components[Components::MESH]);
+		
+		if (m.vertexBuffer >= 0)
+			_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer],&stride,&offset);
+		TransformCache tc = core->GetTransformManager()->GetTransformBuffer(object.components[Components::TRANSFORM]);
+		
+		PerObjectBuffer pob;
+		XMMATRIX world = XMLoadFloat4x4(&tc.world);
+		XMMATRIX view = XMLoadFloat4x4(&pfb.View);
+		XMMATRIX proj = XMLoadFloat4x4(&pfb.Proj);
+
+		XMStoreFloat4x4(&pob.World, XMMatrixTranspose(world));
+		XMStoreFloat4x4(&pob.WVP, XMMatrixTranspose(world * view * proj));
+		XMStoreFloat4x4(&pob.WorldInvTrp, XMMatrixInverse(nullptr, world));
+		XMStoreFloat4x4(&pob.WorldView, XMMatrixTranspose(world * view));
+		XMStoreFloat4x4(&pob.WorldViewInvTrp, XMMatrixInverse(nullptr, world * view));
+
+		D3D11_MAPPED_SUBRESOURCE msr;
+		_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+		memcpy(msr.pData, &pob, sizeof(pob));
+		_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0);
+		_deviceContext->VSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_OBJECT]);
+
+		_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer], &stride, &offset);
+		
+		_deviceContext->Draw(m.vertexCount, 0);
+	}
 
 	_deviceContext->IASetInputLayout(nullptr);
 	_deviceContext->VSSetShader(_vertexShaders[VertexShaders::VS_FULLSCREEN], nullptr, 0);
@@ -354,4 +387,22 @@ void Direct3D11::_CreateRasterizerState()
 	_device->CreateRasterizerState(&rd, &_rasterizerStates[RasterizerStates::RS_CULL_NONE]);
 
 	_deviceContext->RSSetState(_rasterizerStates[RasterizerStates::RS_CULL_NONE]);
+}
+
+void Direct3D11::_CreateConstantBuffers()
+{
+
+	D3D11_BUFFER_DESC bd;
+	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	bd.Usage = D3D11_USAGE_DYNAMIC;
+	bd.StructureByteStride = 0;
+	bd.MiscFlags = 0;
+
+	bd.ByteWidth = sizeof(PerFrameBuffer);
+	_device->CreateBuffer(&bd, nullptr, &_constantBuffers[ConstantBuffers::CB_PER_FRAME]);
+
+	bd.ByteWidth = sizeof(PerObjectBuffer);
+	_device->CreateBuffer(&bd, nullptr, &_constantBuffers[ConstantBuffers::CB_PER_OBJECT]);
+
 }

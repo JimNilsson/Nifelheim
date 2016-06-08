@@ -66,6 +66,8 @@ enum RasterizerStates
 	RS_COUNT
 };
 
+
+
 struct DepthBuffer
 {
 	ID3D11DepthStencilView*   DSV         = nullptr;
@@ -112,6 +114,7 @@ private:
 	void _CreateSamplerState();
 	void _CreateViewPort();
 	void _CreateRasterizerState();
+	void _CreateConstantBuffers();
 
 
 public:

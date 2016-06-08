@@ -24,6 +24,8 @@ public:
 
 	void BindChild(unsigned parent, unsigned child, bool bindTranslation = true, bool bindRotation = true, bool bindScale = false);
 
+	const TransformCache& GetTransformBuffer(unsigned id) const;
+
 private:
 	void _UpdateCache(unsigned id);
 	std::vector<Transform> _transforms;

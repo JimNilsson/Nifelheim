@@ -39,7 +39,7 @@ VS_OUT main( VS_IN input )
 {
 	VS_OUT output = (VS_OUT)0;
 
-	output.posH = float4(input.pos, 1.0f);// mul(float4(input.pos, 1.0f), gWVP);
+	output.posH =  mul(float4(input.pos, 1.0f), gWVP);
 	output.posVS = mul(float4(input.pos, 1.0f), gWVP);
 	output.tex = input.tex;
 
