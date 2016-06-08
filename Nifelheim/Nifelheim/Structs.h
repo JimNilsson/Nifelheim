@@ -3,7 +3,7 @@
 
 #include <DirectXMath.h>
 #include "DebugLogger.h"
-
+#include <vector>
 struct Vertex
 {
 	DirectX::XMFLOAT3 position;
@@ -35,6 +35,24 @@ struct TransformCache
 	}
 	~TransformCache() {}
 	DirectX::XMFLOAT4X4 world;
+	DirectX::XMFLOAT4X4 translation;
+	DirectX::XMFLOAT4X4 rotation;
+	DirectX::XMFLOAT4X4 scale;
+};
+
+struct ChildTransform
+{
+	bool inheritTranslation;
+	bool inheritRotation;
+	bool inheritScale;
+	unsigned id;
+	ChildTransform(unsigned id, bool trans, bool rot, bool scale)
+	{
+		this->id = id;
+		inheritTranslation = trans;
+		inheritRotation = rot;
+		inheritScale = scale;
+	}
 };
 
 struct Transform
@@ -42,6 +60,7 @@ struct Transform
 	DirectX::XMFLOAT3 translation;
 	DirectX::XMFLOAT3 rotation;
 	DirectX::XMFLOAT3 scale;
+	std::vector<ChildTransform> children;
 };
 
 struct Material
@@ -98,11 +117,28 @@ enum Components
 class GameObject
 {
 public:
-	unsigned id;
+	int id;
 	int components[Components::COMPONENT_COUNT] = { -1 };
 	GameObject()
 	{
 		id = GameObject::GenerateID();
+	}
+	GameObject(const GameObject& other)
+	{
+		id = GameObject::GenerateID();
+		for (int i = 0; i < Components::COMPONENT_COUNT; ++i)
+		{
+			components[i] = other.components[i];
+		}
+	}
+	const GameObject& operator=(const GameObject& rhs)
+	{
+		//id should remain unchanged
+		for (int i = 0; i < Components::COMPONENT_COUNT; ++i)
+		{
+			components[i] = rhs.components[i];
+		}
+		return *this;
 	}
 private:
 	static int GenerateID()

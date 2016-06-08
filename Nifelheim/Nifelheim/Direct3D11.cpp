@@ -11,7 +11,7 @@ Direct3D11::Direct3D11()
 {
 	DXGI_SWAP_CHAIN_DESC scd;
 	ZeroMemory(&scd, sizeof(scd));
-	const Core const* core = Core::GetInstance();
+	const Core* core = Core::GetInstance();
 	scd.BufferCount = 1;
 	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -197,7 +197,7 @@ int Direct3D11::CreateIndexBuffer(unsigned * indexData, unsigned indexCount)
 
 void Direct3D11::Draw()
 {
-	const Core const * core = Core::GetInstance();
+	const Core* core = Core::GetInstance();
 	float clearColor[] = { 0.0f,0.0f,0.0f,0.0f };
 
 	for (auto &rtv : _renderTargetViews)
@@ -268,7 +268,7 @@ void Direct3D11::_CreateShadersAndInputLayouts()
 
 void Direct3D11::_CreateDepthBuffer()
 {
-	const Core const* core = Core::GetInstance();
+	const Core* core = Core::GetInstance();
 	D3D11_TEXTURE2D_DESC dsd;
 	ZeroMemory(&dsd, sizeof(dsd));
 	dsd.Width = core->GetWindow()->GetWidth();
@@ -322,10 +322,10 @@ void Direct3D11::_CreateSamplerState()
 
 void Direct3D11::_CreateViewPort()
 {
-	const Core const* core = Core::GetInstance();
+	const Core* core = Core::GetInstance();
 	D3D11_VIEWPORT vp;
-	vp.Width = core->GetWindow()->GetWidth();
-	vp.Height = core->GetWindow()->GetHeight();
+	vp.Width = (FLOAT)core->GetWindow()->GetWidth();
+	vp.Height = (FLOAT)core->GetWindow()->GetHeight();
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
 	vp.TopLeftX = 0.0f;

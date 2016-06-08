@@ -22,7 +22,7 @@ cbuffer PerFrameBuffer : register(b0)
 	float4x4 gViewProj;
 	float4x4 gInvView;
 	float4x4 gInvViewProj;
-	float4 gCamPos;
+	float4 gCamPos; //The w-component is just padding
 }
 
 cbuffer ObjectBuffer : register(b1)
@@ -43,8 +43,8 @@ VS_OUT main( VS_IN input )
 	output.posVS = mul(float4(input.pos, 1.0f), gWVP);
 	output.tex = input.tex;
 
-	float3 posW = mul(float4(input.pos, 1.0f), gWorld);
-	float3 toEye = normalize(posW - gCamPos);
+	float3 posW = mul(float4(input.pos, 1.0f), gWorld).xyz;
+	float3 toEye = normalize(posW - gCamPos.xyz);
 	output.tbn[0] = input.tan.xyz;
 	output.tbn[1] = cross(input.nor.xyz, input.tan.xyz) * input.tan.w;
 	output.tbn[2] = input.nor;

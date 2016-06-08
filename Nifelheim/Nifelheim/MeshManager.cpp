@@ -115,7 +115,7 @@ int MeshManager::LoadMesh(const std::string & filename)
 
 	std::vector<XMFLOAT4> realTan;
 	realTan.resize(realNor.size(), XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f));
-	for (int i = 0; i < positionIndices.size(); i += 3)
+	for (unsigned i = 0; i < positionIndices.size(); i += 3)
 	{
 		const XMFLOAT3& v1 = realPos[i];
 		const XMFLOAT3& v2 = realPos[i + 1];
@@ -169,7 +169,7 @@ int MeshManager::LoadMesh(const std::string & filename)
 
 	}
 
-	for (int i = 0; i < realPos.size(); ++i)
+	for (unsigned i = 0; i < realPos.size(); ++i)
 	{
 		XMVECTOR n = XMLoadFloat3(&realNor[i]);
 		XMVECTOR t = XMLoadFloat4(&tan1[i]);
@@ -182,7 +182,7 @@ int MeshManager::LoadMesh(const std::string & filename)
 
 	finishedVertices.resize(realPos.size());
 
-	for (int i = 0; i < realPos.size(); ++i)
+	for (unsigned i = 0; i < realPos.size(); ++i)
 	{
 		finishedVertices[i].position = realPos[i];
 		finishedVertices[i].normal = realNor[i];

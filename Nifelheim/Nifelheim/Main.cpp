@@ -8,12 +8,14 @@ int main(int argc, char** argv)
 	Core* core = Core::GetInstance();
 	core->Init(800, 600, false);
 
-	int m = core->GetMeshManager()->LoadMesh("cube.obj");
 	SDL_Event ev;
 	
-	Core::CreateGameObject();
-	Core::CreateGameObject();
-	
+	core->CreateGameObject();
+	ObjectID cube = core->CreateGameObject();
+	core->GiveMesh(cube, "cube.obj");
+	int p = 5;
+	const int& k = p;
+	p = 4;
 
 	while(true)
 	{

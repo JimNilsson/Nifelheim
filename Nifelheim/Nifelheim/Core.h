@@ -6,8 +6,9 @@
 #include "Direct3D11.h"
 #include "MeshManager.h"
 #include "CameraManager.h"
+#include "TransformManager.h"
 
-typedef unsigned ObjectID;
+typedef int ObjectID;
 
 //Singleton
 class Core
@@ -20,8 +21,11 @@ private:
 	Direct3D11* _d3d11;
 	MeshManager* _meshManager;
 	CameraManager* _cameraManager;
+	TransformManager* _transformManager;
 
 	std::vector<GameObject> _gameObjects;
+
+	unsigned FindObjectIndex(ObjectID id);
 public:
 	static void CreateInstance();
 	static Core* GetInstance();
@@ -32,8 +36,14 @@ public:
 	Direct3D11* GetDirect3D11() const;
 	MeshManager* GetMeshManager() const;
 	CameraManager* GetCameraManager() const;
+	TransformManager* GetTransformManager() const;
 
-	static ObjectID CreateGameObject();
+	const ObjectID& CreateGameObject();
+	void GiveMesh(ObjectID gameObject, const std::string& filename);
+	void GiveTransform(ObjectID gameObject,
+		float posX, float posY, float posZ,
+		float rotX, float rotY, float rotZ,
+		float scaleX, float scaleY, float scaleZ);
 
 
 

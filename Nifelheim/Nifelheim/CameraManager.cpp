@@ -7,9 +7,9 @@ using namespace DirectX;
 CameraManager::CameraManager()
 {
 	_activeCamera = 0;
-	const Core const* core = Core::GetInstance();
-	float width = core->GetWindow()->GetWidth();
-	float height = core->GetWindow()->GetHeight();
+	const Core* core = Core::GetInstance();
+	float width = (float)core->GetWindow()->GetWidth();
+	float height = (float)core->GetWindow()->GetHeight();
 	float aspectRatio = height / width;
 	float fov = 85.0f;
 	Camera defaultCam;
