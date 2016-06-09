@@ -23,6 +23,8 @@ public:
 	void RotateActiveCamera(float degX, float degY, float degZ);
 	void TranslateActiveCamera(float offsetX, float offsetY, float offsetZ);
 	void SetCameraPosition(float posX, float posY, float posZ);
+	DirectX::XMMATRIX GetView() const;
+	DirectX::XMMATRIX GetProj() const;
 private:
 	std::vector<Camera> _cameras;
 	int _activeCamera;

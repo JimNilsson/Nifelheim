@@ -10,7 +10,7 @@ CameraManager::CameraManager()
 	const Core* core = Core::GetInstance();
 	float width = (float)core->GetWindow()->GetWidth();
 	float height = (float)core->GetWindow()->GetHeight();
-	float aspectRatio = height / width;
+	float aspectRatio = width / height;
 	float fov = 85.0f;
 	Camera defaultCam;
 	defaultCam.aspectRatio = aspectRatio;
@@ -19,7 +19,7 @@ CameraManager::CameraManager()
 	defaultCam.up = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	defaultCam.nearPlane = 1.0f;
 	defaultCam.farPlane = 100.0f;
-	defaultCam.position = XMFLOAT3(0.0f, 0.0f, -2.0f);
+	defaultCam.position = XMFLOAT3(0.0f, 0.0f, -5.0f);
 	_cameras.push_back(defaultCam);
 
 }
@@ -73,11 +73,11 @@ void CameraManager::FillPerFrameBuffer(PerFrameBuffer& pfb, int cameraID)
 	XMMATRIX view = XMMatrixLookToLH(pos, dir, up);
 	XMMATRIX proj = XMMatrixPerspectiveFovLH(_cameras[cameraID].fov, _cameras[cameraID].aspectRatio, _cameras[cameraID].nearPlane, _cameras[cameraID].farPlane);
 
-	XMStoreFloat4x4(&pfb.View, view);
-	XMStoreFloat4x4(&pfb.Proj, proj);
-	XMStoreFloat4x4(&pfb.InvView, XMMatrixInverse(nullptr, view));
-	XMStoreFloat4x4(&pfb.ViewProj, view * proj);
-	XMStoreFloat4x4(&pfb.InvViewProj, XMMatrixInverse(nullptr, view * proj));
+	XMStoreFloat4x4(&pfb.View, XMMatrixTranspose(view));
+	XMStoreFloat4x4(&pfb.Proj, XMMatrixTranspose(proj));
+	XMStoreFloat4x4(&pfb.InvView, XMMatrixTranspose(XMMatrixInverse(nullptr, view)));
+	XMStoreFloat4x4(&pfb.ViewProj, XMMatrixTranspose(view * proj));
+	XMStoreFloat4x4(&pfb.InvViewProj, XMMatrixTranspose(XMMatrixInverse(nullptr, view * proj)));
 	XMStoreFloat4(&pfb.CamPos, pos);
 }
 
@@ -105,4 +105,20 @@ void CameraManager::TranslateActiveCamera(float offsetX, float offsetY, float of
 void CameraManager::SetCameraPosition(float posX, float posY, float posZ)
 {
 	_cameras[_activeCamera].position = XMFLOAT3(posX, posY, posZ);
+}
+
+DirectX::XMMATRIX CameraManager::GetView() const
+{
+	return XMMatrixLookToLH(XMLoadFloat3(&_cameras[_activeCamera].position),
+		XMLoadFloat3(&_cameras[_activeCamera].forward),
+			XMLoadFloat3(&_cameras[_activeCamera].up));
+
+}
+
+DirectX::XMMATRIX CameraManager::GetProj() const
+{
+	return XMMatrixPerspectiveFovLH(_cameras[_activeCamera].fov,
+		_cameras[_activeCamera].aspectRatio,
+		_cameras[_activeCamera].nearPlane,
+		_cameras[_activeCamera].farPlane);
 }

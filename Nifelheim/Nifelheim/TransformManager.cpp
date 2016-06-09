@@ -1,4 +1,5 @@
 #include "TransformManager.h"
+#include "Core.h"
 
 using namespace DirectX;
 
@@ -10,7 +11,7 @@ TransformManager::~TransformManager()
 {
 }
 
-const unsigned TransformManager::CreateTransform(float posX, float posY, float posZ, float scaleX, float scaleY, float scaleZ, float rotX, float rotY, float rotZ)
+const unsigned TransformManager::CreateTransform(const int gameObject, float posX, float posY, float posZ, float scaleX, float scaleY, float scaleZ, float rotX, float rotY, float rotZ)
 {
 	Transform trans;
 	rotX *= 180.0f / XM_PI;
@@ -33,11 +34,63 @@ const unsigned TransformManager::CreateTransform(float posX, float posY, float p
 	XMStoreFloat4x4(&tc.translation, t);
 	XMStoreFloat4x4(&tc.rotation, r);
 	_transformCache.push_back(tc);
+	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
+	const_cast<GameObject&>(go).components[Components::TRANSFORM] = _transformCache.size() - 1;
 
 	return _transformCache.size() - 1;
 }
 
-void TransformManager::Rotate(unsigned id, float degX, float degY, float degZ)
+void TransformManager::Rotate(const int gameObject, float degX, float degY, float degZ)
+{
+	int id = Core::GetInstance()->GetGameObject(gameObject).components[Components::TRANSFORM];
+	if( id >= 0)
+		_Rotate(id, degX, degY, degZ);
+}
+
+void TransformManager::SetRotation(const int gameObject, float degX, float degY, float degZ)
+{
+	int id = Core::GetInstance()->GetGameObject(gameObject).components[Components::TRANSFORM];
+	if (id >= 0)
+		_SetRotation(id, degX, degY, degZ);
+}
+
+void TransformManager::Scale(const int gameObject, float x, float y, float z)
+{
+	int id = Core::GetInstance()->GetGameObject(gameObject).components[Components::TRANSFORM];
+	if (id >= 0)
+		_Scale(id, x, y, z);
+}
+
+void TransformManager::SetScale(const int gameObject, float x, float y, float z)
+{
+	int id = Core::GetInstance()->GetGameObject(gameObject).components[Components::TRANSFORM];
+	if (id >= 0)
+		_SetScale(id, x, y, z);
+}
+
+void TransformManager::Translate(const int gameObject, float x, float y, float z)
+{
+	int id = Core::GetInstance()->GetGameObject(gameObject).components[Components::TRANSFORM];
+	if (id >= 0)
+		_Translate(id, x, y, z);
+}
+
+void TransformManager::SetTranslation(const int gameObject, float x, float y, float z)
+{
+	int id = Core::GetInstance()->GetGameObject(gameObject).components[Components::TRANSFORM];
+	if (id >= 0)
+		_SetTranslation(id, x, y, z);
+}
+
+void TransformManager::BindChild(const int parent, const int child, bool bindTranslation, bool bindRotation, bool bindScale)
+{
+	int parentid = Core::GetInstance()->GetGameObject(parent).components[Components::TRANSFORM];
+	int childid = Core::GetInstance()->GetGameObject(child).components[Components::TRANSFORM];
+	if (parentid >= 0 && childid >= 0)
+		_BindChild(parentid, childid, bindTranslation, bindRotation, bindScale);
+}
+
+void TransformManager::_Rotate(unsigned id, float degX, float degY, float degZ)
 {
 	float radX = degX * 180.0f / XM_PI;
 	float radY = degY * 180.0f / XM_PI;
@@ -70,8 +123,8 @@ void TransformManager::Rotate(unsigned id, float degX, float degY, float degZ)
 			XMVECTOR diff = newPos - oldPos;
 			XMFLOAT3 childTranslation;
 			XMStoreFloat3(&childTranslation, diff);
-			Translate(i.id, childTranslation.x, childTranslation.y, childTranslation.z);
-			Rotate(i.id, radX, radY, radZ);
+			_Translate(i.id, childTranslation.x, childTranslation.y, childTranslation.z);
+			_Rotate(i.id, degX, degY, degZ);
 			_UpdateCache(i.id);
 		}
 	}
@@ -79,7 +132,7 @@ void TransformManager::Rotate(unsigned id, float degX, float degY, float degZ)
 	_UpdateCache(id);
 }
 
-void TransformManager::SetRotation(unsigned id, float degX, float degY, float degZ)
+void TransformManager::_SetRotation(unsigned id, float degX, float degY, float degZ)
 {
 	float radX = degX * 180.0f / XM_PI;
 	float radY = degX * 180.0f / XM_PI;
@@ -104,12 +157,12 @@ void TransformManager::SetRotation(unsigned id, float degX, float degY, float de
 			XMVECTOR diff = newPos - oldPos;
 			XMFLOAT3 childTranslation;
 			XMStoreFloat3(&childTranslation, diff);
-			Translate(i.id, childTranslation.x, childTranslation.y, childTranslation.z);
+			_Translate(i.id, childTranslation.x, childTranslation.y, childTranslation.z);
 			
 			float rotDiffX = (radX - _transforms[i.id].rotation.x) * XM_PI / 180.0f;
 			float rotDiffY = (radY - _transforms[i.id].rotation.y) * XM_PI / 180.0f;
 			float rotDiffZ = (radZ - _transforms[i.id].rotation.z) * XM_PI / 180.0f;
-			Rotate(i.id, rotDiffX, rotDiffY, rotDiffZ);
+			_Rotate(i.id, rotDiffX, rotDiffY, rotDiffZ);
 
 			_UpdateCache(i.id);
 		}
@@ -117,7 +170,7 @@ void TransformManager::SetRotation(unsigned id, float degX, float degY, float de
 	_UpdateCache(id);
 }
 
-void TransformManager::Scale(unsigned id, float x, float y, float z)
+void TransformManager::_Scale(unsigned id, float x, float y, float z)
 {
 	_transforms[id].scale.x *= x;
 	_transforms[id].scale.y *= y;
@@ -126,14 +179,14 @@ void TransformManager::Scale(unsigned id, float x, float y, float z)
 	{
 		if (i.inheritScale)
 		{
-			Scale(i.id, x, y, z);
+			_Scale(i.id, x, y, z);
 			_UpdateCache(i.id);
 		}
 	}
 	_UpdateCache(id);
 }
 
-void TransformManager::SetScale(unsigned id, float x, float y, float z)
+void TransformManager::_SetScale(unsigned id, float x, float y, float z)
 {
 	_transforms[id].scale.x = x;
 	_transforms[id].scale.y = y;
@@ -142,14 +195,14 @@ void TransformManager::SetScale(unsigned id, float x, float y, float z)
 	{
 		if (i.inheritScale)
 		{
-			SetScale(i.id, x, y, z);
+			_SetScale(i.id, x, y, z);
 			_UpdateCache(i.id);
 		}
 	}
 	_UpdateCache(id);
 }
 
-void TransformManager::Translate(unsigned id, float x, float y, float z)
+void TransformManager::_Translate(unsigned id, float x, float y, float z)
 {
 	_transforms[id].translation.x += x;
 	_transforms[id].translation.y += y;
@@ -158,14 +211,14 @@ void TransformManager::Translate(unsigned id, float x, float y, float z)
 	{
 		if (i.inheritTranslation)
 		{
-			Translate(i.id, x, y, z);
+			_Translate(i.id, x, y, z);
 			_UpdateCache(i.id);
 		}
 	}
 	_UpdateCache(id);
 }
 
-void TransformManager::SetTranslation(unsigned id, float x, float y, float z)
+void TransformManager::_SetTranslation(unsigned id, float x, float y, float z)
 {
 	XMFLOAT3 previous = _transforms[id].translation;
 	_transforms[id].translation.x = x;
@@ -178,14 +231,14 @@ void TransformManager::SetTranslation(unsigned id, float x, float y, float z)
 	{
 		if (i.inheritTranslation)
 		{
-			Translate(i.id, diffX, diffY, diffZ);
+			_Translate(i.id, diffX, diffY, diffZ);
 			_UpdateCache(i.id);
 		}
 	}
 	_UpdateCache(id);
 }
 
-void TransformManager::BindChild(unsigned parent, unsigned child, bool bindTranslation, bool bindRotation, bool bindScale)
+void TransformManager::_BindChild(unsigned parent, unsigned child, bool bindTranslation, bool bindRotation, bool bindScale)
 {
 	_transforms[parent].children.push_back(ChildTransform(child, bindTranslation, bindRotation, bindScale));
 }

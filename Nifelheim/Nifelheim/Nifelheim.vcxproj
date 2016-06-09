@@ -121,8 +121,11 @@
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="DebugLogger.cpp" />
     <ClCompile Include="Direct3D11.cpp" />
+    <ClCompile Include="DirectXTK\DDSTextureLoader.cpp" />
+    <ClCompile Include="DirectXTK\WICTextureLoader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MeshManager.cpp" />
+    <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="TransformManager.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
@@ -131,9 +134,16 @@
     <ClInclude Include="Core.h" />
     <ClInclude Include="DebugLogger.h" />
     <ClInclude Include="Direct3D11.h" />
+    <ClInclude Include="DirectXTK\dds.h" />
+    <ClInclude Include="DirectXTK\DDSTextureLoader.h" />
+    <ClInclude Include="DirectXTK\DirectXHelpers.h" />
+    <ClInclude Include="DirectXTK\pch.h" />
+    <ClInclude Include="DirectXTK\PlatformHelpers.h" />
+    <ClInclude Include="DirectXTK\WICTextureLoader.h" />
     <ClInclude Include="Macros.h" />
     <ClInclude Include="MeshManager.h" />
     <ClInclude Include="Structs.h" />
+    <ClInclude Include="TextureManager.h" />
     <ClInclude Include="TransformManager.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>

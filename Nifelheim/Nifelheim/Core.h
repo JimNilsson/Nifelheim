@@ -7,6 +7,7 @@
 #include "MeshManager.h"
 #include "CameraManager.h"
 #include "TransformManager.h"
+#include "TextureManager.h"
 
 typedef int ObjectID;
 
@@ -22,6 +23,7 @@ private:
 	MeshManager* _meshManager;
 	CameraManager* _cameraManager;
 	TransformManager* _transformManager;
+	TextureManager* _textureManager;
 
 	std::vector<GameObject> _gameObjects;
 
@@ -37,13 +39,10 @@ public:
 	MeshManager* GetMeshManager() const;
 	CameraManager* GetCameraManager() const;
 	TransformManager* GetTransformManager() const;
+	TextureManager* GetTextureManager() const;
 
-	const ObjectID& CreateGameObject();
-	void GiveMesh(ObjectID gameObject, const std::string& filename);
-	void GiveTransform(ObjectID gameObject,
-		float posX, float posY, float posZ,
-		float rotX, float rotY, float rotZ,
-		float scaleX, float scaleY, float scaleZ);
+	const int CreateGameObject();
+	const GameObject& GetGameObject(int id) const;
 
 	const std::vector<GameObject>& GetGameObjects() const;
 

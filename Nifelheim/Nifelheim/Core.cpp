@@ -10,6 +10,8 @@ Core::Core()
 	_d3d11 = nullptr;
 	_meshManager = nullptr;
 	_cameraManager = nullptr;
+	_transformManager = nullptr;
+	_textureManager = nullptr;
 }
 Core::~Core()
 {
@@ -53,6 +55,7 @@ void Core::ShutDown()
 	SAFE_DELETE(Core::GetInstance()->_meshManager);
 	SAFE_DELETE(Core::GetInstance()->_cameraManager);
 	SAFE_DELETE(Core::GetInstance()->_transformManager);
+	SAFE_DELETE(Core::GetInstance()->_textureManager);
 	delete _instance;
 	_instance = nullptr;
 }
@@ -64,6 +67,7 @@ void Core::Init(uint32_t width, uint32_t height, bool fullscreen)
 	_meshManager = new MeshManager();
 	_cameraManager = new CameraManager();
 	_transformManager = new TransformManager();
+	_textureManager = new TextureManager();
 
 }
 
@@ -92,37 +96,31 @@ TransformManager * Core::GetTransformManager() const
 	return _transformManager;
 }
 
-const ObjectID& Core::CreateGameObject()
+TextureManager * Core::GetTextureManager() const
+{
+	return _textureManager;
+}
+
+const int Core::CreateGameObject()
 {
 	_gameObjects.push_back(GameObject());
 	return _gameObjects.back().id;
 }
 
-void Core::GiveMesh(ObjectID gameObject, const std::string & filename)
+const GameObject & Core::GetGameObject(int id) const
 {
-	int index = FindObjectIndex(gameObject);
+	int index = Core::GetInstance()->FindObjectIndex(id);
 	if (index >= 0)
 	{
-		_gameObjects[index].components[Components::MESH] = _meshManager->LoadMesh(filename);
+		return _gameObjects[index];
 	}
 	else
 	{
-		DebugLogger::AddMsg("Couldn't find gameobject to give mesh to...");
+		throw std::exception("Nonexistant gameobject referenced.");
 	}
+
 }
 
-void Core::GiveTransform(ObjectID gameObject, float posX, float posY, float posZ, float rotX, float rotY, float rotZ, float scaleX, float scaleY, float scaleZ)
-{
-	int index = FindObjectIndex(gameObject);
-	if (index >= 0)
-	{
-		_gameObjects[index].components[Components::TRANSFORM] = _transformManager->CreateTransform(posX, posY, posZ, scaleX, scaleY, scaleZ, rotX, rotY, rotZ);
-	}
-	else
-	{
-		DebugLogger::AddMsg("Couldn't find gameobject to give transform to...");
-	}
-}
 
 const std::vector<GameObject>& Core::GetGameObjects() const
 {

@@ -10,9 +10,15 @@ int main(int argc, char** argv)
 
 	SDL_Event ev;
 	
-	ObjectID cube = core->CreateGameObject();
-	core->GiveMesh(cube, "cube.obj");
-	core->GiveTransform(cube, 0, 0, 2.0f, 0.0f, 0.0f, 0.0f, 2.0f, 2.0f, 2.0f);
+	int cube = core->CreateGameObject();
+	core->GetMeshManager()->LoadMesh(cube, "cube.obj");
+	core->GetTransformManager()->CreateTransform(cube, 0.0f, 0.0f, 4.5f, 8.0f, 8.0f, 8.0f, 0.0f, 0.0f, 0.0f);
+	core->GetTextureManager()->GiveTexture(cube, "yukieat.png", TextureTypes::TT_DIFFUSE);
+
+	//int otherCube = core->CreateGameObject();
+	//core->GetMeshManager()->LoadMesh(otherCube, "cube.obj");
+	//core->GetTransformManager()->CreateTransform(otherCube, 4.0f, 0.0f, 1.0f, 0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f);
+	//core->GetTransformManager()->BindChild(cube, otherCube);
 	int p = 5;
 	const int& k = p;
 	p = 4;
@@ -23,7 +29,7 @@ int main(int argc, char** argv)
 		if (ev.type == SDL_KEYDOWN)
 			break;
 		core->GetDirect3D11()->Draw();
-		core->GetTransformManager()->Rotate(0, 0.0f, 0.00003f, 0.0f);
+		core->GetTransformManager()->Rotate(cube, 0.00001f, 0.0000f, 0.0000f);
 	}
 	Core::ShutDown();
 	DebugLogger::Dump();

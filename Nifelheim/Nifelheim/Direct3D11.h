@@ -125,6 +125,7 @@ public:
 
 	int CreateVertexBuffer(Vertex* vertexData, unsigned vertexCount);
 	int CreateIndexBuffer(unsigned* indexData, unsigned indexCount);
+	int CreateTexture(const wchar_t* filename);
 
 	void Draw();
 	

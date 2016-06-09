@@ -16,6 +16,12 @@
     <Filter Include="Source Files\Shaders">
       <UniqueIdentifier>{059d8382-55d5-46a3-bfcf-c50c97dc9d23}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DirectXTK">
+      <UniqueIdentifier>{47fe8b92-10ea-4f6d-9e4e-ae4d28f4094a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\DirectXTK">
+      <UniqueIdentifier>{ab05843f-a7e3-4b28-8a7b-db52ae8f92ad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -41,6 +47,15 @@
     </ClCompile>
     <ClCompile Include="TransformManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXTK\DDSTextureLoader.cpp">
+      <Filter>Source Files\DirectXTK</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXTK\WICTextureLoader.cpp">
+      <Filter>Source Files\DirectXTK</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +85,27 @@
     </ClInclude>
     <ClInclude Include="TransformManager.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTK\dds.h">
+      <Filter>Header Files\DirectXTK</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTK\DDSTextureLoader.h">
+      <Filter>Header Files\DirectXTK</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTK\DirectXHelpers.h">
+      <Filter>Header Files\DirectXTK</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTK\pch.h">
+      <Filter>Header Files\DirectXTK</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTK\PlatformHelpers.h">
+      <Filter>Header Files\DirectXTK</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTK\WICTextureLoader.h">
+      <Filter>Header Files\DirectXTK</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

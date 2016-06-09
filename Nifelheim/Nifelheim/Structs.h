@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 #include "DebugLogger.h"
 #include <vector>
+#include <unordered_map>
 struct Vertex
 {
 	DirectX::XMFLOAT3 position;
@@ -70,12 +71,18 @@ struct Material
 	float metallic = 1.0f;
 };
 
+enum TextureTypes
+{
+	TT_DIFFUSE,
+	TT_NORMAL,
+	TT_ROUGHNESS,
+	TT_METALLIC,
+	TT_COUNT
+};
+
 struct Textures
 {
-	int diffuse = -1;
-	int normal = -1;
-	int roughness = -1;
-	int metallic = -1;
+	int textures[TextureTypes::TT_COUNT] = { -1 };
 };
 
 struct Camera
@@ -113,6 +120,7 @@ enum Components
 	TRANSFORM,
 	MESH,
 	MATERIAL,
+	TEXTURES,
 	COMPONENT_COUNT
 };
 
@@ -120,14 +128,16 @@ class GameObject
 {
 public:
 	int id;
-	int components[Components::COMPONENT_COUNT] = { -1 };
+	int components[Components::COMPONENT_COUNT];
 	GameObject()
 	{
 		id = GameObject::GenerateID();
+		memset(components, -1, sizeof(int) * Components::COMPONENT_COUNT);
+
 	}
 	GameObject(const GameObject& other)
 	{
-		id = GameObject::GenerateID();
+		id = other.id;
 		for (int i = 0; i < Components::COMPONENT_COUNT; ++i)
 		{
 			components[i] = other.components[i];

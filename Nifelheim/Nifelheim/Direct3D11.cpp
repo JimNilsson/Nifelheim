@@ -3,6 +3,8 @@
 #include "DebugLogger.h"
 #include "Structs.h"
 #include <exception>
+#include "DirectXTK\DDSTextureLoader.h"
+#include "DirectXTK\WICTextureLoader.h"
 
 using namespace DirectX;
 
@@ -131,6 +133,10 @@ Direct3D11::~Direct3D11()
 	{
 		SAFE_RELEASE(i);
 	}
+	for (auto &i : _textures)
+	{
+		SAFE_RELEASE(i);
+	}
 
 	SAFE_RELEASE(_depth.DSB);
 	SAFE_RELEASE(_depth.DSV);
@@ -165,10 +171,13 @@ int Direct3D11::CreateVertexBuffer(Vertex * vertexData, unsigned vertexCount)
 	ZeroMemory(&data, sizeof(data));
 	data.pSysMem = &vertexData[0];
 	ID3D11Buffer* buffer = nullptr;
-	_vertexBuffers.push_back(buffer);
-	HRESULT hr = _device->CreateBuffer(&bd, &data, &_vertexBuffers.back());
+	HRESULT hr = _device->CreateBuffer(&bd, &data, &buffer);
 	if (FAILED(hr))
+	{
 		DebugLogger::AddMsg("Failed to create vertex buffer");
+		return -1;
+	}
+	_vertexBuffers.push_back(buffer);
 	return _vertexBuffers.size() - 1;
 }
 
@@ -186,12 +195,45 @@ int Direct3D11::CreateIndexBuffer(unsigned * indexData, unsigned indexCount)
 	ZeroMemory(&data, sizeof(data));
 	data.pSysMem = &indexData[0];
 	ID3D11Buffer* buffer = nullptr;
-	_indexBuffers.push_back(buffer);
-	HRESULT hr = _device->CreateBuffer(&bd, &data, &_indexBuffers.back());
+	HRESULT hr = _device->CreateBuffer(&bd, &data, &buffer);
 	if (FAILED(hr))
+	{
 		DebugLogger::AddMsg("Failed to create index buffer");
+		return -1;
+	}
+	_indexBuffers.push_back(buffer);
+	
 	return _vertexBuffers.size() - 1;
+}
 
+int Direct3D11::CreateTexture(const wchar_t * filename)
+{
+	ID3D11ShaderResourceView* srv = nullptr;
+	std::wstring ws(filename);
+	if (ws.substr(ws.size() - 4) == L".dds")
+	{
+		HRESULT hr = CreateDDSTextureFromFile(_device, filename, nullptr, &srv);
+		if (FAILED(hr))
+		{
+			DebugLogger::AddMsg("Failed to create texture from file. (fuck wchar)" );
+			return -1;
+		}
+	}
+	else if (ws.substr(ws.size() - 4) == L".png")
+	{
+		HRESULT hr = CreateWICTextureFromFile(_device, filename, nullptr, &srv);
+		if (FAILED(hr))
+		{
+			DebugLogger::AddMsg("Failed to create texture from file. (fuck wchar)");
+			return -1;
+		}
+	}
+	else
+	{
+		DebugLogger::AddMsg("Unknown fileformat for texture");
+		return -1;
+	}
+	_textures.push_back(srv);
 	return 0;
 }
 
@@ -223,6 +265,8 @@ void Direct3D11::Draw()
 	memcpy(mappedSubres.pData, &pfb, sizeof(pfb));
 	_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_FRAME], 0);
 	_deviceContext->VSSetConstantBuffers(0, 1, &_constantBuffers[ConstantBuffers::CB_PER_FRAME]);
+	XMMATRIX view = core->GetCameraManager()->GetView();
+	XMMATRIX proj = core->GetCameraManager()->GetProj();
 
 	const std::vector<GameObject>& gameObjects = core->GetGameObjects();
 	for (auto object : gameObjects)
@@ -235,9 +279,7 @@ void Direct3D11::Draw()
 		
 		PerObjectBuffer pob;
 		XMMATRIX world = XMLoadFloat4x4(&tc.world);
-		XMMATRIX view = XMLoadFloat4x4(&pfb.View);
-		XMMATRIX proj = XMLoadFloat4x4(&pfb.Proj);
-
+		
 		XMStoreFloat4x4(&pob.World, XMMatrixTranspose(world));
 		XMStoreFloat4x4(&pob.WVP, XMMatrixTranspose(world * view * proj));
 		XMStoreFloat4x4(&pob.WorldInvTrp, XMMatrixInverse(nullptr, world));
@@ -252,6 +294,15 @@ void Direct3D11::Draw()
 
 		_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer], &stride, &offset);
 		
+		if (object.components[Components::TEXTURES] >= 0)
+		{
+			Textures textures = core->GetTextureManager()->GetTextures(object.components[Components::TEXTURES]);
+			if (textures.textures[TextureTypes::TT_DIFFUSE] >= 0)
+			{
+				_deviceContext->PSSetShaderResources(TextureTypes::TT_DIFFUSE, 1, &_textures[textures.textures[TextureTypes::TT_DIFFUSE]]);
+			}
+		}
+
 		_deviceContext->Draw(m.vertexCount, 0);
 	}
 
@@ -277,7 +328,7 @@ void Direct3D11::_CreateShadersAndInputLayouts()
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"TANGENT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0}
 	};
 	_device->CreateInputLayout(id, ARRAYSIZE(id), pVS->GetBufferPointer(), pVS->GetBufferSize(), &_inputLayouts[InputLayouts::IL_STATIC_MESHES]);
 	SAFE_RELEASE(pVS);

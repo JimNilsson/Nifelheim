@@ -14,11 +14,15 @@ MeshManager::~MeshManager()
 {
 }
 
-int MeshManager::LoadMesh(const std::string & filename)
+int MeshManager::LoadMesh(const int gameObject, const std::string & filename)
 {
 	auto exists = _filenameToIndex.find(filename);
 	if (exists != _filenameToIndex.end())
+	{
+		const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
+		const_cast<GameObject&>(go).components[Components::MESH] = exists->second;
 		return exists->second;
+	}
 
 	std::ifstream fin(filename);
 	if (!fin.is_open())
@@ -193,7 +197,9 @@ int MeshManager::LoadMesh(const std::string & filename)
 	mesh.vertexBuffer = Core::GetInstance()->GetDirect3D11()->CreateVertexBuffer(&finishedVertices[0], finishedVertices.size());
 	mesh.vertexCount = finishedVertices.size();
 	_meshes.push_back(mesh);
-
+	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
+	const_cast<GameObject&>(go).components[Components::MESH] = _meshes.size() - 1;
+	_filenameToIndex[filename] = _meshes.size() - 1;
 	return _meshes.size() - 1;
 }
 
