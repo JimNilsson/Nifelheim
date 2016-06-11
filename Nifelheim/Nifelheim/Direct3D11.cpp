@@ -250,6 +250,9 @@ void Direct3D11::Draw()
 	_deviceContext->ClearDepthStencilView(_depth.DSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 //	_deviceContext->ClearDepthStencilView(_depth.DSVReadOnly, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
+	ID3D11ShaderResourceView* nullSRVS[RenderTargets::RT_COUNT] = { nullptr };
+	_deviceContext->PSSetShaderResources(0, RenderTargets::RT_COUNT, nullSRVS);
+
 	_deviceContext->IASetInputLayout(_inputLayouts[InputLayouts::IL_STATIC_MESHES]);
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
@@ -269,41 +272,54 @@ void Direct3D11::Draw()
 	XMMATRIX proj = core->GetCameraManager()->GetProj();
 
 	const std::vector<GameObject>& gameObjects = core->GetGameObjects();
+	int currentVB = -1;
+	int currentIB = -1;
+	int currentTextures[TextureTypes::TT_COUNT] = { -1 };
 	for (auto object : gameObjects)
 	{
-		Mesh m = core->GetMeshManager()->GetMesh(object.components[Components::MESH]);
-		
-		if (m.vertexBuffer >= 0)
-			_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer],&stride,&offset);
-		TransformCache tc = core->GetTransformManager()->GetTransformBuffer(object.components[Components::TRANSFORM]);
-		
-		PerObjectBuffer pob;
-		XMMATRIX world = XMLoadFloat4x4(&tc.world);
-		
-		XMStoreFloat4x4(&pob.World, XMMatrixTranspose(world));
-		XMStoreFloat4x4(&pob.WVP, XMMatrixTranspose(world * view * proj));
-		XMStoreFloat4x4(&pob.WorldInvTrp, XMMatrixInverse(nullptr, world));
-		XMStoreFloat4x4(&pob.WorldView, XMMatrixTranspose(world * view));
-		XMStoreFloat4x4(&pob.WorldViewInvTrp, XMMatrixInverse(nullptr, world * view));
-
-		D3D11_MAPPED_SUBRESOURCE msr;
-		_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
-		memcpy(msr.pData, &pob, sizeof(pob));
-		_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0);
-		_deviceContext->VSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_OBJECT]);
-
-		_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer], &stride, &offset);
-		
-		if (object.components[Components::TEXTURES] >= 0)
+		if (object.components[Components::MESH] >= 0)
 		{
-			Textures textures = core->GetTextureManager()->GetTextures(object.components[Components::TEXTURES]);
-			if (textures.textures[TextureTypes::TT_DIFFUSE] >= 0)
-			{
-				_deviceContext->PSSetShaderResources(TextureTypes::TT_DIFFUSE, 1, &_textures[textures.textures[TextureTypes::TT_DIFFUSE]]);
-			}
-		}
+			Mesh m = core->GetMeshManager()->GetMesh(object.components[Components::MESH]);
 
-		_deviceContext->Draw(m.vertexCount, 0);
+			if (m.vertexBuffer >= 0 && m.vertexBuffer != currentVB)
+			{
+				_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer], &stride, &offset);
+				currentVB = m.vertexBuffer;
+			}
+			TransformCache tc;
+			if(object.components[Components::TRANSFORM] >= 0)
+				tc = core->GetTransformManager()->GetTransformBuffer(object.components[Components::TRANSFORM]);
+
+
+			PerObjectBuffer pob;
+			XMMATRIX world = XMLoadFloat4x4(&tc.world);
+
+			XMStoreFloat4x4(&pob.World, XMMatrixTranspose(world));
+			XMStoreFloat4x4(&pob.WVP, XMMatrixTranspose(world * view * proj));
+			XMStoreFloat4x4(&pob.WorldInvTrp, XMMatrixInverse(nullptr, world));
+			XMStoreFloat4x4(&pob.WorldView, XMMatrixTranspose(world * view));
+			XMStoreFloat4x4(&pob.WorldViewInvTrp, XMMatrixInverse(nullptr, world * view));
+
+			D3D11_MAPPED_SUBRESOURCE msr;
+			_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+			memcpy(msr.pData, &pob, sizeof(pob));
+			_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0);
+			_deviceContext->VSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_OBJECT]);
+
+			_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer], &stride, &offset);
+
+			if (object.components[Components::TEXTURES] >= 0)
+			{
+				Textures textures = core->GetTextureManager()->GetTextures(object.components[Components::TEXTURES]);
+				if (textures.textures[TextureTypes::TT_DIFFUSE] >= 0 && textures.textures[TextureTypes::TT_DIFFUSE] != currentTextures[TextureTypes::TT_DIFFUSE])
+				{
+					_deviceContext->PSSetShaderResources(TextureTypes::TT_DIFFUSE, 1, &_textures[textures.textures[TextureTypes::TT_DIFFUSE]]);
+					currentTextures[TextureTypes::TT_DIFFUSE] = textures.textures[TextureTypes::TT_DIFFUSE];
+				}
+			}
+
+			_deviceContext->Draw(m.vertexCount, 0);
+		}
 	}
 
 	_deviceContext->IASetInputLayout(nullptr);

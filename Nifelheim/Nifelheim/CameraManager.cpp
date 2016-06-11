@@ -11,15 +11,15 @@ CameraManager::CameraManager()
 	float width = (float)core->GetWindow()->GetWidth();
 	float height = (float)core->GetWindow()->GetHeight();
 	float aspectRatio = width / height;
-	float fov = 85.0f;
+	float fov = 85.0f * 180.0f / XM_PI;
 	Camera defaultCam;
 	defaultCam.aspectRatio = aspectRatio;
 	defaultCam.fov = fov;
 	defaultCam.forward = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	defaultCam.up = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	defaultCam.nearPlane = 1.0f;
+	defaultCam.nearPlane = 0.1f;
 	defaultCam.farPlane = 100.0f;
-	defaultCam.position = XMFLOAT3(0.0f, 0.0f, -5.0f);
+	defaultCam.position = XMFLOAT3(0.0f, 0.0f, -11.0f);
 	_cameras.push_back(defaultCam);
 
 }
@@ -90,8 +90,8 @@ void CameraManager::RotateActiveCamera(float degX, float degY, float degZ)
 	XMMATRIX rot = XMMatrixRotationRollPitchYaw(radX, radY, radZ);
 	XMVECTOR dir = XMLoadFloat3(&_cameras[_activeCamera].forward);
 	XMVECTOR up = XMLoadFloat3(&_cameras[_activeCamera].up);
-	XMStoreFloat3(&_cameras[_activeCamera].forward, XMVector2Transform(dir,rot));
-	XMStoreFloat3(&_cameras[_activeCamera].up, XMVector2Transform(up, rot));
+	XMStoreFloat3(&_cameras[_activeCamera].forward, XMVector3Transform(dir,rot));
+	XMStoreFloat3(&_cameras[_activeCamera].up, XMVector3Transform(up, rot));
 
 }
 
@@ -100,6 +100,30 @@ void CameraManager::TranslateActiveCamera(float offsetX, float offsetY, float of
 	_cameras[_activeCamera].position.x += offsetX;
 	_cameras[_activeCamera].position.y += offsetY;
 	_cameras[_activeCamera].position.z += offsetZ;
+}
+
+void CameraManager::MoveForward(float amount)
+{
+	_cameras[_activeCamera].position.x += amount * _cameras[_activeCamera].forward.x;
+	_cameras[_activeCamera].position.y += amount * _cameras[_activeCamera].forward.y;
+	_cameras[_activeCamera].position.z += amount * _cameras[_activeCamera].forward.z;
+}
+
+void CameraManager::MoveRight(float amount)
+{
+	XMVECTOR up = XMLoadFloat3(&_cameras[_activeCamera].up);
+	XMVECTOR forward = XMLoadFloat3(&_cameras[_activeCamera].forward);
+	XMVECTOR r = XMVector3Cross(up, forward);
+	_cameras[_activeCamera].position.x += amount * XMVectorGetX(r);
+	_cameras[_activeCamera].position.y += amount * XMVectorGetY(r);
+	_cameras[_activeCamera].position.z += amount * XMVectorGetZ(r);
+}
+
+void CameraManager::MoveUp(float amount)
+{
+	_cameras[_activeCamera].position.x += amount * _cameras[_activeCamera].up.x;
+	_cameras[_activeCamera].position.y += amount * _cameras[_activeCamera].up.y;
+	_cameras[_activeCamera].position.z += amount * _cameras[_activeCamera].up.z;
 }
 
 void CameraManager::SetCameraPosition(float posX, float posY, float posZ)

@@ -245,7 +245,13 @@ void TransformManager::_BindChild(unsigned parent, unsigned child, bool bindTran
 
 const TransformCache & TransformManager::GetTransformBuffer(unsigned id) const
 {
-	return _transformCache[id];
+	if (id < _transformCache.size())
+		return _transformCache[id];
+	else
+	{
+		DebugLogger::AddMsg("Nonexistant transform referenced.");
+		return TransformCache();
+	}
 }
 
 void TransformManager::_UpdateCache(unsigned id)

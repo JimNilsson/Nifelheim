@@ -12,6 +12,7 @@ Core::Core()
 	_cameraManager = nullptr;
 	_transformManager = nullptr;
 	_textureManager = nullptr;
+	_inputManager = nullptr;
 }
 Core::~Core()
 {
@@ -56,6 +57,7 @@ void Core::ShutDown()
 	SAFE_DELETE(Core::GetInstance()->_cameraManager);
 	SAFE_DELETE(Core::GetInstance()->_transformManager);
 	SAFE_DELETE(Core::GetInstance()->_textureManager);
+	SAFE_DELETE(Core::GetInstance()->_inputManager);
 	delete _instance;
 	_instance = nullptr;
 }
@@ -68,7 +70,14 @@ void Core::Init(uint32_t width, uint32_t height, bool fullscreen)
 	_cameraManager = new CameraManager();
 	_transformManager = new TransformManager();
 	_textureManager = new TextureManager();
+	_inputManager = new InputManager();
 
+}
+
+void Core::Update()
+{
+	_inputManager->Update();
+	_d3d11->Draw();
 }
 
 Window * Core::GetWindow() const
@@ -99,6 +108,11 @@ TransformManager * Core::GetTransformManager() const
 TextureManager * Core::GetTextureManager() const
 {
 	return _textureManager;
+}
+
+InputManager * Core::GetInputManager() const
+{
+	return _inputManager;
 }
 
 const int Core::CreateGameObject()

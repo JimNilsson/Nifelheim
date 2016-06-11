@@ -8,6 +8,7 @@
 #include "CameraManager.h"
 #include "TransformManager.h"
 #include "TextureManager.h"
+#include "InputManager.h"
 
 typedef int ObjectID;
 
@@ -24,6 +25,7 @@ private:
 	CameraManager* _cameraManager;
 	TransformManager* _transformManager;
 	TextureManager* _textureManager;
+	InputManager* _inputManager;
 
 	std::vector<GameObject> _gameObjects;
 
@@ -33,6 +35,7 @@ public:
 	static Core* GetInstance();
 	static void ShutDown();
 	void Init(uint32_t width, uint32_t height, bool fullscreen);
+	void Update();
 
 	Window* GetWindow() const;
 	Direct3D11* GetDirect3D11() const;
@@ -40,6 +43,7 @@ public:
 	CameraManager* GetCameraManager() const;
 	TransformManager* GetTransformManager() const;
 	TextureManager* GetTextureManager() const;
+	InputManager* GetInputManager() const;
 
 	const int CreateGameObject();
 	const GameObject& GetGameObject(int id) const;

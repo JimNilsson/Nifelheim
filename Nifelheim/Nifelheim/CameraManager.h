@@ -22,6 +22,9 @@ public:
 	void FillPerFrameBuffer(PerFrameBuffer& pfb, int cameraID = -1);
 	void RotateActiveCamera(float degX, float degY, float degZ);
 	void TranslateActiveCamera(float offsetX, float offsetY, float offsetZ);
+	void MoveForward(float amount);
+	void MoveRight(float amount);
+	void MoveUp(float amount);
 	void SetCameraPosition(float posX, float posY, float posZ);
 	DirectX::XMMATRIX GetView() const;
 	DirectX::XMMATRIX GetProj() const;
