@@ -141,5 +141,8 @@
     <None Include="FinalVS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="InstancedStaticMeshVS.hlsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

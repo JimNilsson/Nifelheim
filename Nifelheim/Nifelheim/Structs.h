@@ -28,6 +28,10 @@ struct Mesh
 	int indexBuffer = -1;
 	int indexCount = -1;
 	int vertexCount = -1;
+	bool operator==(const Mesh& rhs)
+	{
+		return vertexBuffer == rhs.vertexBuffer;
+	}
 };
 
 struct TransformCache
@@ -87,6 +91,15 @@ enum TextureTypes
 struct Textures
 {
 	int textures[TextureTypes::TT_COUNT] = { -1 };
+	bool operator==(const Textures& rhs)
+	{
+		for (int i = 0; i < TextureTypes::TT_COUNT; ++i)
+		{
+			if (textures[i] != rhs.textures[i])
+				return false;
+		}
+		return true;
+	}
 };
 
 struct Camera
@@ -116,7 +129,6 @@ struct PerObjectBuffer
 	DirectX::XMFLOAT4X4 WorldViewInvTrp;
 	DirectX::XMFLOAT4X4 World;
 	DirectX::XMFLOAT4X4 WorldView;
-	DirectX::XMFLOAT4X4 WorldInvTrp;
 };
 
 struct RenderJob
@@ -124,6 +136,23 @@ struct RenderJob
 	Mesh mesh;
 	DirectX::XMFLOAT4X4 transform;
 	Textures textures;
+};
+
+struct Job
+{
+	Mesh mesh;
+	Textures textures;
+	bool operator==(const Job& rhs)
+	{
+		return mesh == rhs.mesh && textures == rhs.textures;
+	}
+};
+
+struct Batch
+{
+	Job job;
+	DirectX::XMFLOAT4X4* transforms = nullptr;
+	unsigned jobCount = 0;
 };
 
 enum Components
@@ -245,15 +274,6 @@ enum KeyCodes
 	KEY_BACKSPACE = SDLK_BACKSPACE,
 	KEY_ESCAPE = SDLK_ESCAPE
 };
-
-
-
-struct KeyPress
-{
-	bool isDown = false;
-	bool wasPressed = false;
-};
-
 
 struct PointLight
 {

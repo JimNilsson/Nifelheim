@@ -7,6 +7,7 @@
 #include "DirectXTK\WICTextureLoader.h"
 #include <string>
 #include <sstream>
+#include <DirectXMath.h>
 
 using namespace DirectX;
 
@@ -275,44 +276,43 @@ void Direct3D11::Draw()
 	XMMATRIX proj = core->GetCameraManager()->GetProj();
 	unsigned apicalls = 0;
 //	const std::vector<GameObject>& gameObjects = core->GetGameObjects();
-	std::vector<RenderJob> renderjobs;
-	core->GetRenderJobs(renderjobs);
+	//std::vector<RenderJob> renderjobs;
+	//core->GetRenderJobs(renderjobs);
 
-	int currentVB = -1;
-	int currentIB = -1;
-	int currentTextures[TextureTypes::TT_COUNT] = { -1 };
-	
-	for (auto& job : renderjobs)
-	{
-		if (job.mesh.vertexBuffer != currentVB)
-		{
-			++apicalls;
-			_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[job.mesh.vertexBuffer], &stride, &offset);
-			currentVB = job.mesh.vertexBuffer;
-		}
-		XMMATRIX world = XMLoadFloat4x4(&job.transform);
-		PerObjectBuffer pob;
-		XMStoreFloat4x4(&pob.World, XMMatrixTranspose(world));
-		XMStoreFloat4x4(&pob.WVP, XMMatrixTranspose(world * view * proj));
-		XMStoreFloat4x4(&pob.WorldInvTrp, XMMatrixInverse(nullptr, world));
-		XMStoreFloat4x4(&pob.WorldView, XMMatrixTranspose(world * view));
-		XMStoreFloat4x4(&pob.WorldViewInvTrp, XMMatrixInverse(nullptr, world * view));
-		
-		D3D11_MAPPED_SUBRESOURCE msr;
-		_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
-		memcpy(msr.pData, &pob, sizeof(pob));
-		_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0);
-		_deviceContext->VSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_OBJECT]);
+	//int currentVB = -1;
+	//int currentIB = -1;
+	//int currentTextures[TextureTypes::TT_COUNT] = { -1 };
+	//
+	//for (auto& job : renderjobs)
+	//{
+	//	if (job.mesh.vertexBuffer != currentVB)
+	//	{
+	//		++apicalls;
+	//		_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[job.mesh.vertexBuffer], &stride, &offset);
+	//		currentVB = job.mesh.vertexBuffer;
+	//	}
+	//	XMMATRIX world = XMLoadFloat4x4(&job.transform);
+	//	PerObjectBuffer pob;
+	//	XMStoreFloat4x4(&pob.World, XMMatrixTranspose(world));
+	//	XMStoreFloat4x4(&pob.WVP, XMMatrixTranspose(world * view * proj));
+	//	XMStoreFloat4x4(&pob.WorldView, XMMatrixTranspose(world * view));
+	//	XMStoreFloat4x4(&pob.WorldViewInvTrp, XMMatrixInverse(nullptr, world * view));
+	//	
+	//	D3D11_MAPPED_SUBRESOURCE msr;
+	//	_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+	//	memcpy(msr.pData, &pob, sizeof(pob));
+	//	_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0);
+	//	_deviceContext->VSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_OBJECT]);
 
-		if (job.textures.textures[TextureTypes::TT_DIFFUSE] != currentTextures[TextureTypes::TT_DIFFUSE])
-		{
-			++apicalls;
-			_deviceContext->PSSetShaderResources(0, 1, &_textures[job.textures.textures[TextureTypes::TT_DIFFUSE]]);
-			currentTextures[TextureTypes::TT_DIFFUSE] = job.textures.textures[TextureTypes::TT_DIFFUSE];
-		}
+	//	if (job.textures.textures[TextureTypes::TT_DIFFUSE] != currentTextures[TextureTypes::TT_DIFFUSE])
+	//	{
+	//		++apicalls;
+	//		_deviceContext->PSSetShaderResources(0, 1, &_textures[job.textures.textures[TextureTypes::TT_DIFFUSE]]);
+	//		currentTextures[TextureTypes::TT_DIFFUSE] = job.textures.textures[TextureTypes::TT_DIFFUSE];
+	//	}
 
-		_deviceContext->Draw(job.mesh.vertexCount, 0);
-	}
+	//	_deviceContext->Draw(job.mesh.vertexCount, 0);
+	//}
 
 
 	//for (auto& object : gameObjects)
@@ -337,7 +337,6 @@ void Direct3D11::Draw()
 
 	//		XMStoreFloat4x4(&pob.World, XMMatrixTranspose(world));
 	//		XMStoreFloat4x4(&pob.WVP, XMMatrixTranspose(world * view * proj));
-	//		XMStoreFloat4x4(&pob.WorldInvTrp, XMMatrixInverse(nullptr, world));
 	//		XMStoreFloat4x4(&pob.WorldView, XMMatrixTranspose(world * view));
 	//		XMStoreFloat4x4(&pob.WorldViewInvTrp, XMMatrixInverse(nullptr, world * view));
 
@@ -363,12 +362,53 @@ void Direct3D11::Draw()
 	//		_deviceContext->Draw(m.vertexCount, 0);
 	//	}
 	//}
-	if (core->GetInputManager()->WasKeyPressed(KEY_L))
+	//if (core->GetInputManager()->WasKeyPressed(KEY_L))
+	//{
+	//	std::stringstream ss;
+	//	ss << apicalls;
+	//	DebugLogger::AddMsg("API calls: " + ss.str());
+	//}
+
+	std::vector<Batch> rbatch;
+	core->GetRenderBatches(rbatch);
+	PerObjectBuffer pob[MAX_INSTANCES];
+	_deviceContext->VSSetShader(_vertexShaders[VertexShaders::VS_STATIC_MESHES_INSTANCED], nullptr, 0);
+	for (auto& b : rbatch)
 	{
-		std::stringstream ss;
-		ss << apicalls;
-		DebugLogger::AddMsg("API calls: " + ss.str());
+		if(b.job.mesh.vertexBuffer >= 0)
+		{
+			_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[b.job.mesh.vertexBuffer], &stride, &offset);
+			for (int i = 0; i < b.jobCount; ++i)
+			{
+				XMMATRIX world = DirectX::XMLoadFloat4x4(&b.transforms[i]);
+
+				DirectX::XMStoreFloat4x4(&pob[i].World, XMMatrixTranspose(world));
+				DirectX::XMStoreFloat4x4(&pob[i].WVP, XMMatrixTranspose(world * view * proj));
+				DirectX::XMStoreFloat4x4(&pob[i].WorldView, XMMatrixTranspose(world * view));
+				DirectX::XMStoreFloat4x4(&pob[i].WorldViewInvTrp, XMMatrixInverse(nullptr, world * view));
+			}
+			D3D11_MAPPED_SUBRESOURCE msr;
+			_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_PER_INSTANCE], 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+			memcpy(msr.pData, &pob[0], sizeof(PerObjectBuffer) * MAX_INSTANCES);
+			_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_INSTANCE], 0);
+			_deviceContext->VSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_INSTANCE]);
+
+			if (b.job.textures.textures[TextureTypes::TT_DIFFUSE] >= 0)
+				_deviceContext->PSSetShaderResources(0, 1, &_textures[b.job.textures.textures[TextureTypes::TT_DIFFUSE]]);
+
+			_deviceContext->DrawInstanced(b.job.mesh.vertexCount, b.jobCount, 0, 0);
+			
+		}
+
+
 	}
+
+
+	for (auto &i : rbatch)
+	{
+		delete[] i.transforms;
+	}
+
 	_deviceContext->IASetInputLayout(nullptr);
 	_deviceContext->VSSetShader(_vertexShaders[VertexShaders::VS_FULLSCREEN], nullptr, 0);
 	_deviceContext->PSSetShader(_pixelShaders[PixelShaders::PS_FINAL], nullptr, 0);
@@ -395,10 +435,11 @@ void Direct3D11::_CreateShadersAndInputLayouts()
 	};
 	_device->CreateInputLayout(id, ARRAYSIZE(id), pVS->GetBufferPointer(), pVS->GetBufferSize(), &_inputLayouts[InputLayouts::IL_STATIC_MESHES]);
 	SAFE_RELEASE(pVS);
-
+	HRESULT hr;
 	D3DCompileFromFile(L"FinalVS.hlsl", nullptr, nullptr, "main", "vs_4_0",
 		NULL, NULL, &pVS, nullptr);
 	_device->CreateVertexShader(pVS->GetBufferPointer(), pVS->GetBufferSize(), nullptr, &_vertexShaders[VertexShaders::VS_FULLSCREEN]);
+	SAFE_RELEASE(pVS);
 
 	D3DCompileFromFile(L"StaticMeshPS.hlsl", nullptr, nullptr, "main", "ps_4_0",
 		NULL, NULL, &pVS, nullptr);
@@ -410,6 +451,10 @@ void Direct3D11::_CreateShadersAndInputLayouts()
 	_device->CreatePixelShader(pVS->GetBufferPointer(), pVS->GetBufferSize(), nullptr, &_pixelShaders[PixelShaders::PS_FINAL]);
 	SAFE_RELEASE(pVS);
 
+	hr = D3DCompileFromFile(L"InstancedStaticMeshVS.hlsl", nullptr, nullptr, "main", "vs_5_0",
+		NULL, NULL, &pVS, nullptr);
+	_device->CreateVertexShader(pVS->GetBufferPointer(), pVS->GetBufferSize(), nullptr, &_vertexShaders[VertexShaders::VS_STATIC_MESHES_INSTANCED]);
+	SAFE_RELEASE(pVS);
 
 }
 
@@ -505,7 +550,7 @@ void Direct3D11::_CreateRasterizerState()
 
 void Direct3D11::_CreateConstantBuffers()
 {
-
+	HRESULT hr;
 	D3D11_BUFFER_DESC bd;
 	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -518,5 +563,8 @@ void Direct3D11::_CreateConstantBuffers()
 
 	bd.ByteWidth = sizeof(PerObjectBuffer);
 	_device->CreateBuffer(&bd, nullptr, &_constantBuffers[ConstantBuffers::CB_PER_OBJECT]);
+
+	bd.ByteWidth = sizeof(PerObjectBuffer) * MAX_INSTANCES;
+	hr = _device->CreateBuffer(&bd, nullptr, &_constantBuffers[ConstantBuffers::CB_PER_INSTANCE]);
 
 }

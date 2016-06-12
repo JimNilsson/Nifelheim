@@ -58,6 +58,8 @@ public:
 
 	void GetRenderJobs(std::vector<RenderJob>& renderjobs) const;
 
+	void GetRenderBatches(std::vector<Batch>& meshbatches) const;
+
 
 
 

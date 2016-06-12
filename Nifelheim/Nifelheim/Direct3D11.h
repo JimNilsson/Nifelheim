@@ -3,6 +3,7 @@
 
 #define GBUFFER_COUNT 4
 #define SAFE_RELEASE(x) {if(x){ x->Release(); x = nullptr;}};
+#define MAX_INSTANCES 128
 
 #include <d3d11.h>
 #include <d3dcompiler.h>
@@ -16,6 +17,7 @@
 enum VertexShaders
 {
 	VS_STATIC_MESHES,
+	VS_STATIC_MESHES_INSTANCED,
 	VS_FULLSCREEN,
 	VS_COUNT
 };
@@ -50,6 +52,7 @@ enum ConstantBuffers
 {
 	CB_PER_FRAME,
 	CB_PER_OBJECT,
+	CB_PER_INSTANCE,
 	CB_COUNT
 };
 
@@ -109,6 +112,7 @@ private:
 	ID3D11InputLayout* _inputLayouts[InputLayouts::LAYOUT_COUNT] = { nullptr };
 	ID3D11SamplerState* _samplerStates[Samplers::SAM_COUNT] = { nullptr };
 	ID3D11RasterizerState* _rasterizerStates[RasterizerStates::RS_COUNT] = { nullptr };
+	
 
 	void _CreateShadersAndInputLayouts();
 	void _CreateDepthBuffer();

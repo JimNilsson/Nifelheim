@@ -203,7 +203,9 @@ int MeshManager::LoadMesh(const int gameObject, const std::string & filename)
 	return _meshes.size() - 1;
 }
 
-const Mesh & MeshManager::GetMesh(unsigned id) const
+Mesh MeshManager::GetMesh(unsigned id) const
 {
-	return _meshes[id];
+	if(id < _meshes.size())
+		return _meshes[id];
+	return Mesh();
 }

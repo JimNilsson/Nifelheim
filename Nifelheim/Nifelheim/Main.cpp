@@ -12,6 +12,9 @@ int main(int argc, char** argv)
 	core->Init(800, 600, false);
 	srand(893844938);
 	//
+
+
+	//
 	int cube = core->CreateGameObject();
 	core->GetMeshManager()->LoadMesh(cube, "cube.obj");
 	core->GetTransformManager()->CreateTransform(cube, -5.0f, 0.0f, 4.5f, 3.0f, 3.0f, 3.0f, 0.0f, 0.0f, 0.0f);

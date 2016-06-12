@@ -187,6 +187,7 @@ void Core::GetRenderJobs(std::vector<RenderJob>& renderjobs) const
 		rjs[i].reserve(nrOfEach[i]);
 		totalRenderJobs += nrOfEach[i];
 	}
+	delete[] nrOfEach;
 	for (const auto &o : _gameObjects)
 	{
 		if (o.components[Components::MESH] >= 0)
@@ -212,4 +213,55 @@ void Core::GetRenderJobs(std::vector<RenderJob>& renderjobs) const
 		memcpy(&renderjobs[index], &i[0], sizeof(RenderJob) * i.size());
 		index += i.size();
 	}
+}
+
+void Core::GetRenderBatches(std::vector<Batch>& meshbatches) const
+{
+
+	int size = _gameObjects.size();
+	int remaining = size;
+	int* indices = new int[size];
+	for (int i = 0; i < size; ++i)
+		indices[i] = i;
+
+	
+	for (int i = 0; i < size; ++i)
+	{	
+		if (indices[i] >= 0)
+		{
+			std::vector<DirectX::XMFLOAT4X4> transforms;
+			transforms.reserve(remaining);
+
+			meshbatches.push_back(Batch());
+			Batch& b = meshbatches.back();
+			b.jobCount = 0;
+			Job job;
+
+			job.mesh = _meshManager->GetMesh(_gameObjects[indices[i]].components[Components::MESH]);
+			job.textures = _textureManager->GetTextures(_gameObjects[indices[i]].components[Components::TEXTURES]);
+			for (int j = i; j < size && b.jobCount < MAX_INSTANCES; ++j)
+			{
+				if (indices[j] >= 0)
+				{
+					Job compJob;
+					compJob.mesh = _meshManager->GetMesh(_gameObjects[indices[j]].components[Components::MESH]);
+					compJob.textures = _textureManager->GetTextures(_gameObjects[indices[j]].components[Components::TEXTURES]);
+					if (job == compJob)
+					{
+						++b.jobCount;
+						transforms.push_back(_transformManager->GetWorld(_gameObjects[indices[j]].components[Components::TRANSFORM]));
+						indices[j] = -1;
+					}
+				}
+				
+			}
+			remaining -= b.jobCount;
+			b.job = job;
+			//caller's responsibility to clean up.
+			b.transforms = new DirectX::XMFLOAT4X4[b.jobCount];
+			memcpy(b.transforms, &transforms[0], sizeof(DirectX::XMFLOAT4X4) * b.jobCount);
+		}
+	}
+	delete[] indices;
+
 }

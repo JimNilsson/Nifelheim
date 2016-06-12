@@ -30,13 +30,18 @@ void TextureManager::GiveTexture(int gameObject, const std::string& filename, Te
 	}
 
 
+	
+
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
 	std::wstring wfilename = conv.from_bytes(filename.c_str());
 	int d3dindex = Core::GetInstance()->GetDirect3D11()->CreateTexture(wfilename.c_str());
 	_textures[go.components[Components::TEXTURES]].textures[type] = d3dindex;
+	_filenameToIndex[filename] = d3dindex;
 }
 
 const Textures & TextureManager::GetTextures(int index) const
 {
-	return _textures[index];
+	if(index < _textures.size())
+		return _textures[index];
+	return Textures();
 }
