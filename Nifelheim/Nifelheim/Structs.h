@@ -35,9 +35,9 @@ struct TransformCache
 	TransformCache()
 	{
 		DirectX::XMStoreFloat4x4(&world, DirectX::XMMatrixIdentity());
-		DirectX::XMStoreFloat4x4(&translation, DirectX::XMMatrixIdentity());
-		DirectX::XMStoreFloat4x4(&scale, DirectX::XMMatrixIdentity());
-		DirectX::XMStoreFloat4x4(&rotation, DirectX::XMMatrixIdentity());
+		//DirectX::XMStoreFloat4x4(&translation, DirectX::XMMatrixIdentity());
+		//DirectX::XMStoreFloat4x4(&scale, DirectX::XMMatrixIdentity());
+		//DirectX::XMStoreFloat4x4(&rotation, DirectX::XMMatrixIdentity());
 	}
 	~TransformCache() {}
 	DirectX::XMFLOAT4X4 world;
@@ -119,12 +119,20 @@ struct PerObjectBuffer
 	DirectX::XMFLOAT4X4 WorldInvTrp;
 };
 
+struct RenderJob
+{
+	Mesh mesh;
+	DirectX::XMFLOAT4X4 transform;
+	Textures textures;
+};
+
 enum Components
 {
 	TRANSFORM,
 	MESH,
 	MATERIAL,
 	TEXTURES,
+	LIGHTSOURCE,
 	COMPONENT_COUNT
 };
 
@@ -246,6 +254,14 @@ struct KeyPress
 	bool wasPressed = false;
 };
 
+
+struct PointLight
+{
+	DirectX::XMFLOAT3 position;
+	float range;	
+	DirectX::XMFLOAT3 color;
+	float intensity;
+};
 
 
 #endif

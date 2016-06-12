@@ -4,7 +4,7 @@
 
 InputManager::InputManager()
 {
-	_keyInfo[5] = KeyPress();
+
 }
 
 InputManager::~InputManager()
@@ -13,39 +13,40 @@ InputManager::~InputManager()
 
 bool InputManager::WasKeyPressed(unsigned keyCode) const
 {
-	auto got = _keyInfo.find(keyCode);
-	if (got == _keyInfo.end())
+	auto got = _pressedKeys.find(keyCode);
+	if (got == _pressedKeys.end())
 		return false;
 
-	return got->second.wasPressed;
+	return got->second;
 }
 
 bool InputManager::IsKeyDown(unsigned keyCode) const
 {
-	auto got = _keyInfo.find(keyCode);
-	if (got == _keyInfo.end())
+	auto got = _downKeys.find(keyCode);
+	if (got == _downKeys.end())
 		return false;
 
-	return got->second.isDown;
+	return got->second;
 }
 
 
 void InputManager::Update()
 {
+	_pressedKeys.clear();
 	SDL_Event ev;
 	SDL_PollEvent(&ev);
 	switch (ev.type)
 	{
 	case SDL_KEYDOWN:
 	{
-		_keyInfo[ev.key.keysym.sym].wasPressed = !_keyInfo[ev.key.keysym.sym].isDown;
-		_keyInfo[ev.key.keysym.sym].isDown = true;
+		_pressedKeys[ev.key.keysym.sym] = true;
+		_downKeys[ev.key.keysym.sym] = true;
 		break;
 	}
 	case SDL_KEYUP:
 	{
-		_keyInfo[ev.key.keysym.sym].wasPressed = false;
-		_keyInfo[ev.key.keysym.sym].isDown = false;
+		_downKeys[ev.key.keysym.sym] = false;
+		_pressedKeys[ev.key.keysym.sym] = false;
 	}
 	default:
 		break;

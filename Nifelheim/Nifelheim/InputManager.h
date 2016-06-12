@@ -3,7 +3,7 @@
 
 #include "Structs.h"
 #include <unordered_map>
-
+#include <map>
 class InputManager
 {
 public:
@@ -13,7 +13,8 @@ public:
 	bool WasKeyPressed(unsigned keyCode) const;
 	bool IsKeyDown(unsigned keyCode) const;
 private:
-	std::unordered_map<unsigned, KeyPress> _keyInfo;
+	std::map<unsigned, bool> _pressedKeys;
+	std::map<unsigned, bool> _downKeys;
 };
 
 

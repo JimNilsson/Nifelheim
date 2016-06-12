@@ -90,6 +90,14 @@ void TransformManager::BindChild(const int parent, const int child, bool bindTra
 		_BindChild(parentid, childid, bindTranslation, bindRotation, bindScale);
 }
 
+DirectX::XMFLOAT4X4 TransformManager::GetWorld(unsigned id) const
+{
+	if (id < _transformCache.size())
+		return _transformCache[id].world;
+	else
+		throw std::exception("Index out of bounds in transformmanager");
+}
+
 void TransformManager::_Rotate(unsigned id, float degX, float degY, float degZ)
 {
 	float radX = degX * 180.0f / XM_PI;
@@ -249,8 +257,7 @@ const TransformCache & TransformManager::GetTransformBuffer(unsigned id) const
 		return _transformCache[id];
 	else
 	{
-		DebugLogger::AddMsg("Nonexistant transform referenced.");
-		return TransformCache();
+		throw std::exception("Nonexistant transform referenced.");
 	}
 }
 

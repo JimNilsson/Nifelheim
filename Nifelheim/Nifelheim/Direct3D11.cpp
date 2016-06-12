@@ -5,6 +5,8 @@
 #include <exception>
 #include "DirectXTK\DDSTextureLoader.h"
 #include "DirectXTK\WICTextureLoader.h"
+#include <string>
+#include <sstream>
 
 using namespace DirectX;
 
@@ -17,8 +19,8 @@ Direct3D11::Direct3D11()
 	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scd.OutputWindow = core->GetWindow()->GetHandle();
-	scd.SampleDesc.Count = 1; //We will be using deferred lighting
-	scd.Windowed = TRUE; //Why BOOL is an int is probably related to working in C
+	scd.SampleDesc.Count = 1; 
+	scd.Windowed = TRUE; 
 	
 	HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG, NULL, NULL, D3D11_SDK_VERSION, &scd, &_swapChain, &_device, NULL, &_deviceContext);
 	if (FAILED(hr))
@@ -234,7 +236,7 @@ int Direct3D11::CreateTexture(const wchar_t * filename)
 		return -1;
 	}
 	_textures.push_back(srv);
-	return 0;
+	return _textures.size() - 1;
 }
 
 void Direct3D11::Draw()
@@ -268,60 +270,105 @@ void Direct3D11::Draw()
 	memcpy(mappedSubres.pData, &pfb, sizeof(pfb));
 	_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_FRAME], 0);
 	_deviceContext->VSSetConstantBuffers(0, 1, &_constantBuffers[ConstantBuffers::CB_PER_FRAME]);
+	
 	XMMATRIX view = core->GetCameraManager()->GetView();
 	XMMATRIX proj = core->GetCameraManager()->GetProj();
+	unsigned apicalls = 0;
+//	const std::vector<GameObject>& gameObjects = core->GetGameObjects();
+	std::vector<RenderJob> renderjobs;
+	core->GetRenderJobs(renderjobs);
 
-	const std::vector<GameObject>& gameObjects = core->GetGameObjects();
 	int currentVB = -1;
 	int currentIB = -1;
 	int currentTextures[TextureTypes::TT_COUNT] = { -1 };
-	for (auto object : gameObjects)
+	
+	for (auto& job : renderjobs)
 	{
-		if (object.components[Components::MESH] >= 0)
+		if (job.mesh.vertexBuffer != currentVB)
 		{
-			Mesh m = core->GetMeshManager()->GetMesh(object.components[Components::MESH]);
-
-			if (m.vertexBuffer >= 0 && m.vertexBuffer != currentVB)
-			{
-				_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer], &stride, &offset);
-				currentVB = m.vertexBuffer;
-			}
-			TransformCache tc;
-			if(object.components[Components::TRANSFORM] >= 0)
-				tc = core->GetTransformManager()->GetTransformBuffer(object.components[Components::TRANSFORM]);
-
-
-			PerObjectBuffer pob;
-			XMMATRIX world = XMLoadFloat4x4(&tc.world);
-
-			XMStoreFloat4x4(&pob.World, XMMatrixTranspose(world));
-			XMStoreFloat4x4(&pob.WVP, XMMatrixTranspose(world * view * proj));
-			XMStoreFloat4x4(&pob.WorldInvTrp, XMMatrixInverse(nullptr, world));
-			XMStoreFloat4x4(&pob.WorldView, XMMatrixTranspose(world * view));
-			XMStoreFloat4x4(&pob.WorldViewInvTrp, XMMatrixInverse(nullptr, world * view));
-
-			D3D11_MAPPED_SUBRESOURCE msr;
-			_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
-			memcpy(msr.pData, &pob, sizeof(pob));
-			_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0);
-			_deviceContext->VSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_OBJECT]);
-
-			_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer], &stride, &offset);
-
-			if (object.components[Components::TEXTURES] >= 0)
-			{
-				Textures textures = core->GetTextureManager()->GetTextures(object.components[Components::TEXTURES]);
-				if (textures.textures[TextureTypes::TT_DIFFUSE] >= 0 && textures.textures[TextureTypes::TT_DIFFUSE] != currentTextures[TextureTypes::TT_DIFFUSE])
-				{
-					_deviceContext->PSSetShaderResources(TextureTypes::TT_DIFFUSE, 1, &_textures[textures.textures[TextureTypes::TT_DIFFUSE]]);
-					currentTextures[TextureTypes::TT_DIFFUSE] = textures.textures[TextureTypes::TT_DIFFUSE];
-				}
-			}
-
-			_deviceContext->Draw(m.vertexCount, 0);
+			++apicalls;
+			_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[job.mesh.vertexBuffer], &stride, &offset);
+			currentVB = job.mesh.vertexBuffer;
 		}
+		XMMATRIX world = XMLoadFloat4x4(&job.transform);
+		PerObjectBuffer pob;
+		XMStoreFloat4x4(&pob.World, XMMatrixTranspose(world));
+		XMStoreFloat4x4(&pob.WVP, XMMatrixTranspose(world * view * proj));
+		XMStoreFloat4x4(&pob.WorldInvTrp, XMMatrixInverse(nullptr, world));
+		XMStoreFloat4x4(&pob.WorldView, XMMatrixTranspose(world * view));
+		XMStoreFloat4x4(&pob.WorldViewInvTrp, XMMatrixInverse(nullptr, world * view));
+		
+		D3D11_MAPPED_SUBRESOURCE msr;
+		_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+		memcpy(msr.pData, &pob, sizeof(pob));
+		_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0);
+		_deviceContext->VSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_OBJECT]);
+
+		if (job.textures.textures[TextureTypes::TT_DIFFUSE] != currentTextures[TextureTypes::TT_DIFFUSE])
+		{
+			++apicalls;
+			_deviceContext->PSSetShaderResources(0, 1, &_textures[job.textures.textures[TextureTypes::TT_DIFFUSE]]);
+			currentTextures[TextureTypes::TT_DIFFUSE] = job.textures.textures[TextureTypes::TT_DIFFUSE];
+		}
+
+		_deviceContext->Draw(job.mesh.vertexCount, 0);
 	}
 
+
+	//for (auto& object : gameObjects)
+	//{
+	//	if (object.components[Components::MESH] >= 0)
+	//	{
+	//		Mesh m = core->GetMeshManager()->GetMesh(object.components[Components::MESH]);
+
+	//		if (m.vertexBuffer >= 0 && m.vertexBuffer != currentVB)
+	//		{
+	//			++apicalls;
+	//			_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer], &stride, &offset);
+	//			currentVB = m.vertexBuffer;
+	//		}
+	//		TransformCache tc;
+	//		if(object.components[Components::TRANSFORM] >= 0)
+	//			tc = core->GetTransformManager()->GetTransformBuffer(object.components[Components::TRANSFORM]);
+
+
+	//		PerObjectBuffer pob;
+	//		XMMATRIX world = XMLoadFloat4x4(&tc.world);
+
+	//		XMStoreFloat4x4(&pob.World, XMMatrixTranspose(world));
+	//		XMStoreFloat4x4(&pob.WVP, XMMatrixTranspose(world * view * proj));
+	//		XMStoreFloat4x4(&pob.WorldInvTrp, XMMatrixInverse(nullptr, world));
+	//		XMStoreFloat4x4(&pob.WorldView, XMMatrixTranspose(world * view));
+	//		XMStoreFloat4x4(&pob.WorldViewInvTrp, XMMatrixInverse(nullptr, world * view));
+
+	//		D3D11_MAPPED_SUBRESOURCE msr;
+	//		_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+	//		memcpy(msr.pData, &pob, sizeof(pob));
+	//		_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_PER_OBJECT], 0);
+	//		_deviceContext->VSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_OBJECT]);
+
+	//		_deviceContext->IASetVertexBuffers(0, 1, &_vertexBuffers[m.vertexBuffer], &stride, &offset);
+
+	//		if (object.components[Components::TEXTURES] >= 0)
+	//		{
+	//			Textures textures = core->GetTextureManager()->GetTextures(object.components[Components::TEXTURES]);
+	//			if (textures.textures[TextureTypes::TT_DIFFUSE] >= 0 && textures.textures[TextureTypes::TT_DIFFUSE] != currentTextures[TextureTypes::TT_DIFFUSE])
+	//			{
+	//				++apicalls;
+	//				_deviceContext->PSSetShaderResources(TextureTypes::TT_DIFFUSE, 1, &_textures[textures.textures[TextureTypes::TT_DIFFUSE]]);
+	//				currentTextures[TextureTypes::TT_DIFFUSE] = textures.textures[TextureTypes::TT_DIFFUSE];
+	//			}
+	//		}
+
+	//		_deviceContext->Draw(m.vertexCount, 0);
+	//	}
+	//}
+	if (core->GetInputManager()->WasKeyPressed(KEY_L))
+	{
+		std::stringstream ss;
+		ss << apicalls;
+		DebugLogger::AddMsg("API calls: " + ss.str());
+	}
 	_deviceContext->IASetInputLayout(nullptr);
 	_deviceContext->VSSetShader(_vertexShaders[VertexShaders::VS_FULLSCREEN], nullptr, 0);
 	_deviceContext->PSSetShader(_pixelShaders[PixelShaders::PS_FINAL], nullptr, 0);

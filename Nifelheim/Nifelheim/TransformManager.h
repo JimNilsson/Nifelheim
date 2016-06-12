@@ -25,6 +25,8 @@ public:
 
 	void BindChild(const int parent, const int child, bool bindTranslation = true, bool bindRotation = true, bool bindScale = false);
 
+	DirectX::XMFLOAT4X4 GetWorld(unsigned id) const;
+
 	const TransformCache& GetTransformBuffer(unsigned id) const;
 
 private:

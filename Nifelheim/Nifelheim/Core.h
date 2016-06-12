@@ -9,6 +9,8 @@
 #include "TransformManager.h"
 #include "TextureManager.h"
 #include "InputManager.h"
+#include "LightManager.h"
+#include "Timer.h"
 
 typedef int ObjectID;
 
@@ -26,7 +28,9 @@ private:
 	TransformManager* _transformManager;
 	TextureManager* _textureManager;
 	InputManager* _inputManager;
+	LightManager* _lightManager;
 
+	Timer* _timer;
 	std::vector<GameObject> _gameObjects;
 
 	unsigned FindObjectIndex(ObjectID id);
@@ -44,11 +48,15 @@ public:
 	TransformManager* GetTransformManager() const;
 	TextureManager* GetTextureManager() const;
 	InputManager* GetInputManager() const;
+	LightManager* GetLightManager() const;
+	Timer* GetTimer() const;
 
 	const int CreateGameObject();
 	const GameObject& GetGameObject(int id) const;
 
 	const std::vector<GameObject>& GetGameObjects() const;
+
+	void GetRenderJobs(std::vector<RenderJob>& renderjobs) const;
 
 
 

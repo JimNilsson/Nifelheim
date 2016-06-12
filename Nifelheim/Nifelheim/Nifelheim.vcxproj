@@ -124,9 +124,11 @@
     <ClCompile Include="DirectXTK\DDSTextureLoader.cpp" />
     <ClCompile Include="DirectXTK\WICTextureLoader.cpp" />
     <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="LightManager.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MeshManager.cpp" />
     <ClCompile Include="TextureManager.cpp" />
+    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="TransformManager.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
@@ -142,10 +144,12 @@
     <ClInclude Include="DirectXTK\PlatformHelpers.h" />
     <ClInclude Include="DirectXTK\WICTextureLoader.h" />
     <ClInclude Include="InputManager.h" />
+    <ClInclude Include="LightManager.h" />
     <ClInclude Include="Macros.h" />
     <ClInclude Include="MeshManager.h" />
     <ClInclude Include="Structs.h" />
     <ClInclude Include="TextureManager.h" />
+    <ClInclude Include="Timer.h" />
     <ClInclude Include="TransformManager.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
