@@ -98,6 +98,14 @@ DirectX::XMFLOAT4X4 TransformManager::GetWorld(unsigned id) const
 		throw std::exception("Index out of bounds in transformmanager");
 }
 
+DirectX::XMFLOAT3 TransformManager::GetPosition(unsigned id) const
+{
+	if (id < _transforms.size())
+		return _transforms[id].translation;
+	else
+		throw std::exception("Index out of bounds in transformmanager");
+}
+
 void TransformManager::_Rotate(unsigned id, float degX, float degY, float degZ)
 {
 	float radX = degX * 180.0f / XM_PI;

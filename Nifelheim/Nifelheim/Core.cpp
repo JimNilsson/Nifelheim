@@ -222,7 +222,14 @@ void Core::GetRenderBatches(std::vector<Batch>& meshbatches) const
 	int remaining = size;
 	int* indices = new int[size];
 	for (int i = 0; i < size; ++i)
-		indices[i] = i;
+	{
+		if (_gameObjects[i].components[Components::MESH] >= 0)
+			indices[i] = i;
+		else
+			indices[i] = -1;
+	}
+
+	
 
 	
 	for (int i = 0; i < size; ++i)
@@ -265,3 +272,4 @@ void Core::GetRenderBatches(std::vector<Batch>& meshbatches) const
 	delete[] indices;
 
 }
+

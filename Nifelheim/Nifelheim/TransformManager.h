@@ -11,8 +11,8 @@ public:
 	~TransformManager();
 	const unsigned CreateTransform(const int gameObject,
 		float posX, float posY, float posZ,
-		float scaleX, float scaleY, float scaleZ,
-		float rotX, float rotY, float rotZ);
+		float scaleX = 1.0f, float scaleY = 1.0f, float scaleZ = 1.0f,
+		float rotX = 0.0f, float rotY = 0.0f, float rotZ = 0.0f);
 	
 	void Rotate(const int gameObject, float degX, float degY, float degZ);
 	void SetRotation(const int gameObject, float degX, float degY, float degZ);
@@ -26,6 +26,7 @@ public:
 	void BindChild(const int parent, const int child, bool bindTranslation = true, bool bindRotation = true, bool bindScale = false);
 
 	DirectX::XMFLOAT4X4 GetWorld(unsigned id) const;
+	DirectX::XMFLOAT3 GetPosition(unsigned id) const;
 
 	const TransformCache& GetTransformBuffer(unsigned id) const;
 

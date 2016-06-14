@@ -78,6 +78,7 @@ void CameraManager::FillPerFrameBuffer(PerFrameBuffer& pfb, int cameraID)
 	XMStoreFloat4x4(&pfb.InvView, XMMatrixTranspose(XMMatrixInverse(nullptr, view)));
 	XMStoreFloat4x4(&pfb.ViewProj, XMMatrixTranspose(view * proj));
 	XMStoreFloat4x4(&pfb.InvViewProj, XMMatrixTranspose(XMMatrixInverse(nullptr, view * proj)));
+	XMStoreFloat4x4(&pfb.InvProj, XMMatrixTranspose(XMMatrixInverse(nullptr,proj)));
 	XMStoreFloat4(&pfb.CamPos, pos);
 }
 

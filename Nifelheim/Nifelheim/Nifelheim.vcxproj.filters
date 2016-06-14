@@ -125,6 +125,9 @@
     <ClInclude Include="LightManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SceneManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="StaticMeshVS.hlsl">
@@ -133,15 +136,15 @@
     <FxCompile Include="StaticMeshPS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="FinalPS.hlsl">
-      <Filter>Source Files\Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="FinalVS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="InstancedStaticMeshVS.hlsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="FinalPS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>

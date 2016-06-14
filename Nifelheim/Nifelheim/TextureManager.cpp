@@ -39,9 +39,10 @@ void TextureManager::GiveTexture(int gameObject, const std::string& filename, Te
 	_filenameToIndex[filename] = d3dindex;
 }
 
-const Textures & TextureManager::GetTextures(int index) const
+const Textures & TextureManager::GetTextures(unsigned index) const
 {
-	if(index < _textures.size())
+	if (index < _textures.size())
 		return _textures[index];
-	return Textures();
+	else
+		throw std::exception("Invalid index in  TextureManager");
 }

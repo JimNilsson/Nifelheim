@@ -31,6 +31,11 @@ int main(int argc, char** argv)
 	core->GetTransformManager()->CreateTransform(thirdCube, 0.0f, 5.0f, 4.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
 	core->GetTextureManager()->GiveTexture(thirdCube, "goodsnes.png", TextureTypes::TT_DIFFUSE);
 	//core->GetTransformManager()->BindChild(otherCube, thirdCube);
+
+	int light = core->CreateGameObject();
+	core->GetLightManager()->GivePointLight(light, 1.0f, 1.0f, 1.0f, 100.0f, 1.0f);
+	core->GetTransformManager()->CreateTransform(light, 10.0f, 10.0f, 10.0f);
+
 	for (int i = 0; i < 200; ++i)
 	{
 		int someobject = core->CreateGameObject();
@@ -43,6 +48,9 @@ int main(int argc, char** argv)
 		core->GetTransformManager()->CreateTransform(someobject, rand() % 20, rand() % 20, rand() % 20, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
 		core->GetTextureManager()->GiveTexture(someobject, "goodsnes.png", TextureTypes::TT_DIFFUSE);
 	}
+
+	
+
 	InputManager* i = core->GetInputManager();
 	CameraManager* c = core->GetCameraManager();
 	Timer* t = core->GetTimer();

@@ -53,6 +53,7 @@ enum ConstantBuffers
 	CB_PER_FRAME,
 	CB_PER_OBJECT,
 	CB_PER_INSTANCE,
+	CB_LIGHTBUFFER,
 	CB_COUNT
 };
 
@@ -68,8 +69,15 @@ enum RasterizerStates
 	RS_CULL_BACK,
 	RS_COUNT
 };
-
-
+#define MAX_POINTLIGHTS 512U
+struct LightBuffer
+{
+	PointLight pointLights[512];
+	unsigned pointLightCount;
+	float pad;
+	float pad2;
+	float pad3;
+};
 
 
 struct DepthBuffer

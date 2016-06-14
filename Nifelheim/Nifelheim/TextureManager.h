@@ -11,7 +11,7 @@ public:
 	TextureManager();
 	~TextureManager();
 	void GiveTexture(int gameObject,const std::string& filename, TextureTypes type);
-	const Textures& GetTextures(int index) const;
+	const Textures& GetTextures(unsigned index) const;
 private:
 	std::vector<Textures> _textures;
 	std::unordered_map<std::string, int> _filenameToIndex;

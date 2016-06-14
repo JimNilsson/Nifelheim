@@ -39,9 +39,9 @@ struct TransformCache
 	TransformCache()
 	{
 		DirectX::XMStoreFloat4x4(&world, DirectX::XMMatrixIdentity());
-		//DirectX::XMStoreFloat4x4(&translation, DirectX::XMMatrixIdentity());
-		//DirectX::XMStoreFloat4x4(&scale, DirectX::XMMatrixIdentity());
-		//DirectX::XMStoreFloat4x4(&rotation, DirectX::XMMatrixIdentity());
+		DirectX::XMStoreFloat4x4(&translation, DirectX::XMMatrixIdentity());
+		DirectX::XMStoreFloat4x4(&scale, DirectX::XMMatrixIdentity());
+		DirectX::XMStoreFloat4x4(&rotation, DirectX::XMMatrixIdentity());
 	}
 	~TransformCache() {}
 	DirectX::XMFLOAT4X4 world;
@@ -120,6 +120,7 @@ struct PerFrameBuffer
 	DirectX::XMFLOAT4X4 ViewProj;
 	DirectX::XMFLOAT4X4 InvView;
 	DirectX::XMFLOAT4X4 InvViewProj;
+	DirectX::XMFLOAT4X4 InvProj;
 	DirectX::XMFLOAT4 CamPos;
 };
 
@@ -277,12 +278,17 @@ enum KeyCodes
 
 struct PointLight
 {
-	DirectX::XMFLOAT3 position;
-	float range;	
-	DirectX::XMFLOAT3 color;
-	float intensity;
+	DirectX::XMFLOAT3 position = DirectX::XMFLOAT3(0.0f,0.0f,0.0f);
+	float range = 0;	
+	DirectX::XMFLOAT3 color = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float intensity = 0;
 };
 
+
+struct LightComponent
+{
+	int pointLight = -1;
+};
 
 #endif
 
