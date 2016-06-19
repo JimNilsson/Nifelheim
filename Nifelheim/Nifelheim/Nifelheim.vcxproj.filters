@@ -133,15 +133,15 @@
     <FxCompile Include="StaticMeshVS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="StaticMeshPS.hlsl">
-      <Filter>Source Files\Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="FinalVS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="InstancedStaticMeshVS.hlsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="StaticMeshPS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="FinalPS.hlsl">

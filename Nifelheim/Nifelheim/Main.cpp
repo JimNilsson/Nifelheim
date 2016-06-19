@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 	Core::CreateInstance();
 	Core* core = Core::GetInstance();
 	core->Init(800, 600, false);
-	srand(893844938);
+	srand(1232323);
 	//
 
 
@@ -32,21 +32,54 @@ int main(int argc, char** argv)
 	core->GetTextureManager()->GiveTexture(thirdCube, "goodsnes.png", TextureTypes::TT_DIFFUSE);
 	//core->GetTransformManager()->BindChild(otherCube, thirdCube);
 
-	int light = core->CreateGameObject();
-	core->GetLightManager()->GivePointLight(light, 1.0f, 1.0f, 1.0f, 100.0f, 1.0f);
-	core->GetTransformManager()->CreateTransform(light, 10.0f, 10.0f, 10.0f);
+	int uglyfuck = core->CreateGameObject();
+	core->GetMeshManager()->LoadMesh(uglyfuck, "uglyfuck.obj");
+	core->GetTransformManager()->CreateTransform(uglyfuck, 5.0f, 0.5f, 5.0f,0.25f,0.25f,0.25f);
+	core->GetTextureManager()->GiveTexture(uglyfuck, "ft_stone01_c.png", TextureTypes::TT_DIFFUSE);
+	core->GetTextureManager()->GiveTexture(uglyfuck, "default_n.png", TextureTypes::TT_NORMAL);
 
-	for (int i = 0; i < 200; ++i)
+	int terrain = core->CreateGameObject();
+	core->GetMeshManager()->LoadTerrain(terrain, "island257.data", 0.005f, 1.0f);
+	core->GetTransformManager()->CreateTransform(terrain, 0.0f, 0.0f, 0.0f, 0.25f, 1.0f, 0.25f);
+	core->GetTextureManager()->GiveTexture(terrain, "ft_stone01_c.png", TextureTypes::TT_DIFFUSE);
+	core->GetTextureManager()->GiveTexture(terrain, "ft_stone01_n.png", TextureTypes::TT_NORMAL);
+
+	for (int i = 0; i < 4; ++i)
+	{
+		int light = core->CreateGameObject();
+		
+		core->GetLightManager()->GivePointLight(light, 1.0f, 1.0f, 1.0f, 20.0f, 1.0f);
+		
+
+		float xpos = rand() % 20;
+		float ypos = 1.0f + 2.0f*((float)rand() / RAND_MAX);
+		float zpos = rand() % 20;
+		core->GetTransformManager()->CreateTransform(light, xpos, ypos, zpos);
+		
+		int ssomeobject = core->CreateGameObject();
+		core->GetMeshManager()->LoadMesh(ssomeobject, "cube.obj");
+		core->GetTransformManager()->CreateTransform(ssomeobject, xpos, ypos, zpos, 0.1f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f);
+		core->GetTextureManager()->GiveTexture(ssomeobject, "yukieat.png", TextureTypes::TT_DIFFUSE);
+		core->GetTextureManager()->GiveTexture(ssomeobject, "yukieat.png", TextureTypes::TT_NORMAL);
+
+	}
+	int poslight = core->CreateGameObject();
+	core->GetMeshManager()->LoadMesh(poslight, "cube.obj");
+	core->GetTransformManager()->CreateTransform(poslight, 0.0f, 0.0f, 0.0f);
+	core->GetTextureManager()->GiveTexture(poslight, "megumin.png", TextureTypes::TT_DIFFUSE);
+
+	for (int i = 0; i < 400; ++i)
 	{
 		int someobject = core->CreateGameObject();
 		core->GetMeshManager()->LoadMesh(someobject, "cube.obj");
-		core->GetTransformManager()->CreateTransform(someobject, rand() % 20, rand() % 20, rand() % 20, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-		core->GetTextureManager()->GiveTexture(someobject, "yukieat.png", TextureTypes::TT_DIFFUSE);
+		core->GetTransformManager()->CreateTransform(someobject, i % 20, 0.0f, i / 20, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+		core->GetTextureManager()->GiveTexture(someobject, "ft_stone01_c.png", TextureTypes::TT_DIFFUSE);
+		core->GetTextureManager()->GiveTexture(someobject, "ft_stone01_n.png", TextureTypes::TT_NORMAL);
 
-		someobject = core->CreateGameObject();
-		core->GetMeshManager()->LoadMesh(someobject, "gudsnes.obj");
-		core->GetTransformManager()->CreateTransform(someobject, rand() % 20, rand() % 20, rand() % 20, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-		core->GetTextureManager()->GiveTexture(someobject, "goodsnes.png", TextureTypes::TT_DIFFUSE);
+		//someobject = core->CreateGameObject();
+		//core->GetMeshManager()->LoadMesh(someobject, "ringbox.obj");
+		//core->GetTransformManager()->CreateTransform(someobject, rand() % 20, rand() % 20, rand() % 20, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+		//core->GetTextureManager()->GiveTexture(someobject, "megumin.png", TextureTypes::TT_DIFFUSE);
 	}
 
 	
@@ -73,6 +106,10 @@ int main(int argc, char** argv)
 			c->MoveRight(deltatime * -4.0f);
 		if (i->IsKeyDown(KEY_D))
 			c->MoveRight(deltatime * 4.0f);
+		if (i->IsKeyDown(KEY_LSHIFT))
+			c->MoveUp(deltatime * 4.0f);
+		if (i->IsKeyDown(KEY_LCTRL))
+			c->MoveUp(deltatime*-4.0f);
 		if (i->WasKeyPressed(KEY_K))
 		{
 			std::stringstream ss;

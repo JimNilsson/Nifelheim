@@ -5,6 +5,8 @@
 
 using namespace DirectX;
 
+bool IsPowerOf2(size_t n);
+
 MeshManager::MeshManager()
 {
 	
@@ -203,9 +205,176 @@ int MeshManager::LoadMesh(const int gameObject, const std::string & filename)
 	return _meshes.size() - 1;
 }
 
+int MeshManager::LoadTerrain(const int gameObject, const std::string & filename, float scale, float offset, unsigned byteperpixel)
+{
+	auto exists = _filenameToIndex.find(filename);
+	if (exists != _filenameToIndex.end())
+	{
+		const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
+		const_cast<GameObject&>(go).components[Components::MESH] = exists->second;
+		return exists->second;
+	}
+	if (!(byteperpixel == 1 || byteperpixel == 2 || byteperpixel == 4))
+	{
+		DebugLogger::AddMsg("LoadTerrain: byteperpixel must be 1, 2 or 4.");
+		return -1;
+	}
+	//Open with fileptr at end of file to figure the size of the file
+	std::ifstream fin(filename, std::ifstream::ate | std::ifstream::binary);
+	if (!fin.is_open())
+	{
+		DebugLogger::AddMsg("Could not find file: " + filename);
+		return -1;
+	}
+
+	size_t filesize = fin.tellg();
+	size_t datapoints = filesize / byteperpixel;
+	fin.seekg(std::ios_base::beg);
+
+	//Valid dimensions for heightmaps are (2^m + 1)x(2^m + 1)
+	size_t n = static_cast<int>(sqrt(datapoints));
+	if (n * n != datapoints || !IsPowerOf2(n - 1))
+	{
+		DebugLogger::AddMsg("Unsupported dimension for heightmap. Must be of dimension (2^m + 1)x(2^m + 1)");
+		return -1;
+	}
+
+	char* rawData = new char[filesize];
+	fin.read((char*)&rawData[0], filesize);
+	fin.close();
+	float* heightmap = new float[datapoints];
+	for (int i = 0; i < datapoints; ++i)
+	{
+		
+		unsigned height = 0;
+		memcpy(&height, &rawData[i * byteperpixel], byteperpixel);
+		float heightf = static_cast<float>(height);
+		heightmap[i] = heightf * scale + offset;
+	}
+	delete[] rawData;
+
+	Vertex* vertices = new Vertex[datapoints];
+	float halfWidth = 0.5f * static_cast<float>(n);
+	float dd = static_cast<float>(n) / static_cast<float>(n - 1);
+	float duv = 1.0f / static_cast<float>(n - 1);
+	for (unsigned i = 0; i < datapoints; ++i)
+	{
+		float x = -halfWidth + (i % n)*dd;
+		float z = -halfWidth + (i / n)*dd;
+		vertices[i].position = XMFLOAT3(x, heightmap[i], z);
+		vertices[i].normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertices[i].tangent = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+		vertices[i].texcoord = XMFLOAT2((i % n) * duv * n, (i / n) * duv * n);
+	}
+
+	uint32_t* indices = new uint32_t[n * n * 6];
+	unsigned k = 0;
+	for (unsigned i = 0; i < n - 1; ++i)
+	{
+		for (unsigned j = 0; j < n - 1; ++j)
+		{
+			indices[k]     = i * n + j;
+			indices[k + 1] = i * n + j + 1;
+			indices[k + 2] = (i + 1)*n + j;
+			indices[k + 3] = (i + 1)*n + j;
+			indices[k + 4] = i*n + j + 1;
+			indices[k + 5] = (i + 1)*n + j + 1;
+			k += 6;
+		}
+	}
+
+	for (int i = 0; i < (n - 1)*(n - 1) * 6; i += 3)
+	{
+		XMVECTOR v0 = XMLoadFloat3(&vertices[indices[i]].position);
+		XMVECTOR v1 = XMLoadFloat3(&vertices[indices[i + 1]].position);
+		XMVECTOR v2 = XMLoadFloat3(&vertices[indices[i + 2]].position);
+
+		XMVECTOR e0 = XMVectorSubtract(v2, v0);
+		XMVECTOR e1 = XMVectorSubtract(v1, v0);
+		XMVECTOR normal = XMVector3Normalize(XMVector3Cross(e0, e1));
+
+		XMStoreFloat3(&vertices[indices[i]].normal, normal + XMLoadFloat3(&vertices[indices[i]].normal));
+		XMStoreFloat3(&vertices[indices[i + 1]].normal, normal + XMLoadFloat3(&vertices[indices[i + 1]].normal));
+		XMStoreFloat3(&vertices[indices[i + 2]].normal, normal + XMLoadFloat3(&vertices[indices[i + 2]].normal));
+
+		vertices[indices[i + 1]].texcoord.y *= XMVectorGetX(XMVector3Length(e0));
+		vertices[indices[i + 2]].texcoord.x *= XMVectorGetX(XMVector3Length(e1));
+	}
+
+	for (int i = 0; i < datapoints; ++i)
+	{
+		XMStoreFloat3(&vertices[i].normal, XMVector3Normalize(XMLoadFloat3(&vertices[i].normal)));
+		XMVECTOR v = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+		XMVECTOR tan = XMVector3Cross(XMLoadFloat3(&vertices[i].normal), v);
+		tan = XMVectorSetW(tan, -1.0f);
+		XMStoreFloat4(&vertices[i].tangent, tan);
+	}
+
+	const Core* core = Core::GetInstance();
+	Mesh m;
+	m.vertexBuffer = core->GetDirect3D11()->CreateVertexBuffer(vertices, datapoints);
+	m.vertexCount = datapoints;
+	m.indexBuffer = core->GetDirect3D11()->CreateIndexBuffer(indices, (n - 1)*(n - 1) * 6);
+	m.indexCount = (n - 1)*(n - 1) * 6;
+
+	_meshes.push_back(m);
+
+	const GameObject& go = core->GetGameObject(gameObject);
+	const_cast<GameObject&>(go).components[Components::MESH] = _meshes.size() - 1;
+
+	_filenameToIndex[filename] = _meshes.size() - 1;
+
+	delete[] vertices;
+	delete[] indices;
+
+	return 0;
+}
+
 Mesh MeshManager::GetMesh(unsigned id) const
 {
 	if(id < _meshes.size())
 		return _meshes[id];
 	return Mesh();
+}
+
+void MeshManager::_Filter3x3(float** heightmap, const size_t n)
+{
+	float* filtered = new float[n*n];
+	for (size_t i = 0; i < n*n; ++i)
+	{
+		filtered[i] = _Sample3x3(*heightmap, i % n, i / n, n);
+	}
+	delete[](*heightmap);
+	(*heightmap) = filtered;
+}
+
+float MeshManager::_Sample3x3(float * heightmap, unsigned x, unsigned z, const size_t n)
+{
+	float sum = 0.0f;
+	unsigned samples = 0;
+	const size_t max = n * n;
+
+	for (int i = -1; i < 2; ++i)
+	{
+		for (int j = -1; j < 2; ++j)
+		{
+			int index = (x + i)*n + (z + j);
+			if (index >= 0 && index < max)
+			{
+				sum += heightmap[index];
+				++samples;
+			}
+		}
+	}
+	return sum / static_cast<float>(samples);
+}
+
+
+bool IsPowerOf2(size_t n)
+{
+	if (n % 2 != 0)
+		return false;
+	if (n == 2)
+		return true;
+	return IsPowerOf2(n / 2);
 }

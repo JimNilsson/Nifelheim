@@ -207,7 +207,7 @@ int Direct3D11::CreateIndexBuffer(unsigned * indexData, unsigned indexCount)
 	}
 	_indexBuffers.push_back(buffer);
 	
-	return _vertexBuffers.size() - 1;
+	return _indexBuffers.size() - 1;
 }
 
 int Direct3D11::CreateTexture(const wchar_t * filename)
@@ -304,9 +304,17 @@ void Direct3D11::Draw()
 
 			if (b.job.textures.textures[TextureTypes::TT_DIFFUSE] >= 0)
 				_deviceContext->PSSetShaderResources(0, 1, &_textures[b.job.textures.textures[TextureTypes::TT_DIFFUSE]]);
-
-			_deviceContext->DrawInstanced(b.job.mesh.vertexCount, b.jobCount, 0, 0);
-			
+			if (b.job.textures.textures[TextureTypes::TT_NORMAL] >= 0)
+				_deviceContext->PSSetShaderResources(1, 1, &_textures[b.job.textures.textures[TextureTypes::TT_NORMAL]]);
+			if(b.job.mesh.indexBuffer < 0)
+			{
+				_deviceContext->DrawInstanced(b.job.mesh.vertexCount, b.jobCount, 0, 0);
+			}
+			else
+			{
+				_deviceContext->IASetIndexBuffer(_indexBuffers[b.job.mesh.indexBuffer], DXGI_FORMAT_R32_UINT, 0);
+				_deviceContext->DrawIndexedInstanced(b.job.mesh.indexCount, b.jobCount, 0, 0, 0);
+			}
 		}
 
 
