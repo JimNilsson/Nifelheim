@@ -52,5 +52,6 @@ PS_OUT main(VS_OUT input)
 	//output.Normal.a = Metallic.Sample(AniSam, input.tex);
 	//output.Diffuse.rgb = DiffuseMap.Sample(AniSam, input.tex);
 	//output.Diffuse.a = Roughness.Sample(AniSam, input.tex);
+	//output.Diffuse.rgb = float3(input.tex.x, input.tex.y, 0.0f);
 	return output;
 }

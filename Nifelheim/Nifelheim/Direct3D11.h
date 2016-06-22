@@ -22,6 +22,12 @@ enum VertexShaders
 	VS_COUNT
 };
 
+enum GeometryShaders
+{
+	GS_SCALE_UV,
+	GS_COUNT
+};
+
 enum PixelShaders
 {
 	PS_STATIC_MESHES,
@@ -67,6 +73,7 @@ enum RasterizerStates
 {
 	RS_CULL_NONE,
 	RS_CULL_BACK,
+	RS_WIREFRAME,
 	RS_COUNT
 };
 #define MAX_POINTLIGHTS 512U
@@ -97,22 +104,18 @@ private:
 	IDXGISwapChain*                     _swapChain = nullptr;
 	ID3D11RenderTargetView*             _backbufferRTV = nullptr;
 
-	//ID3D11Texture2D*                    _RTT[GBUFFER_COUNT] = { nullptr };
-	//ID3D11RenderTargetView*             _RTV[GBUFFER_COUNT] = { nullptr };
-	//ID3D11ShaderResourceView*           _SRV[GBUFFER_COUNT] = { nullptr };
-
-
-
 	DepthBuffer                         _depth;
 
 
-	ID3D11VertexShader* _vertexShaders[VertexShaders::VS_COUNT] = { nullptr };
-//	std::vector<ID3D11GeometryShader*> _geometryShaders;
-	ID3D11PixelShader* _pixelShaders[PixelShaders::PS_COUNT] = { nullptr };
-	ID3D11ComputeShader* _computeShaders[ComputeShaders::CS_COUNT] = { nullptr };
-	ID3D11RenderTargetView* _renderTargetViews[RenderTargets::RT_COUNT] = { nullptr };
+	ID3D11VertexShader*     _vertexShaders[VertexShaders::VS_COUNT] = { nullptr };
+	ID3D11GeometryShader*   _geometryShaders[GeometryShaders::GS_COUNT] = { nullptr };
+	ID3D11PixelShader*      _pixelShaders[PixelShaders::PS_COUNT] = { nullptr };
+	ID3D11ComputeShader*    _computeShaders[ComputeShaders::CS_COUNT] = { nullptr };
+	
+	ID3D11RenderTargetView*   _renderTargetViews[RenderTargets::RT_COUNT] = { nullptr };
 	ID3D11ShaderResourceView* _shaderResourceViews[RenderTargets::RT_COUNT] = { nullptr }; //related to deferred
-	ID3D11Texture2D* _renderTargetTextures[RenderTargets::RT_COUNT] = { nullptr };
+	ID3D11Texture2D*          _renderTargetTextures[RenderTargets::RT_COUNT] = { nullptr };
+	
 	std::vector<ID3D11ShaderResourceView*> _textures; //diffuse maps, normal maps, etc.
 	std::vector<ID3D11Buffer*> _vertexBuffers;
 	std::vector<ID3D11Buffer*> _indexBuffers;

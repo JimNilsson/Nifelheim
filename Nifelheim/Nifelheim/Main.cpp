@@ -39,21 +39,21 @@ int main(int argc, char** argv)
 	core->GetTextureManager()->GiveTexture(uglyfuck, "default_n.png", TextureTypes::TT_NORMAL);
 
 	int terrain = core->CreateGameObject();
-	core->GetMeshManager()->LoadTerrain(terrain, "island257.data", 0.005f, 1.0f);
+	core->GetMeshManager()->LoadTerrain(terrain, "various257.data", 0.005f, 1.0f);
 	core->GetTransformManager()->CreateTransform(terrain, 0.0f, 0.0f, 0.0f, 0.25f, 1.0f, 0.25f);
 	core->GetTextureManager()->GiveTexture(terrain, "ft_stone01_c.png", TextureTypes::TT_DIFFUSE);
 	core->GetTextureManager()->GiveTexture(terrain, "ft_stone01_n.png", TextureTypes::TT_NORMAL);
 
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < 80; ++i)
 	{
 		int light = core->CreateGameObject();
 		
 		core->GetLightManager()->GivePointLight(light, 1.0f, 1.0f, 1.0f, 20.0f, 1.0f);
 		
 
-		float xpos = rand() % 20;
-		float ypos = 1.0f + 2.0f*((float)rand() / RAND_MAX);
-		float zpos = rand() % 20;
+		float xpos = rand() % 64 - 32;
+		float ypos = 2.0f + 4.0f*((float)rand() / RAND_MAX);
+		float zpos = rand() % 64 - 32;
 		core->GetTransformManager()->CreateTransform(light, xpos, ypos, zpos);
 		
 		int ssomeobject = core->CreateGameObject();

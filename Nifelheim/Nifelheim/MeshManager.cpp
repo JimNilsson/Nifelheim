@@ -297,8 +297,8 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 		XMStoreFloat3(&vertices[indices[i + 1]].normal, normal + XMLoadFloat3(&vertices[indices[i + 1]].normal));
 		XMStoreFloat3(&vertices[indices[i + 2]].normal, normal + XMLoadFloat3(&vertices[indices[i + 2]].normal));
 
-		vertices[indices[i + 1]].texcoord.y *= XMVectorGetX(XMVector3Length(e0));
-		vertices[indices[i + 2]].texcoord.x *= XMVectorGetX(XMVector3Length(e1));
+		//vertices[indices[i + 1]].texcoord.y *= XMVectorGetX(XMVector3Length(e0));
+		//vertices[indices[i + 2]].texcoord.y *= XMVectorGetX(XMVector3Length(e1));
 	}
 
 	for (int i = 0; i < datapoints; ++i)
@@ -308,21 +308,58 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 		XMVECTOR tan = XMVector3Cross(XMLoadFloat3(&vertices[i].normal), v);
 		tan = XMVectorSetW(tan, -1.0f);
 		XMStoreFloat4(&vertices[i].tangent, tan);
+
+		if ((i + 1) % n > i && i + 1 < datapoints)
+		{
+			XMVECTOR p1 = XMLoadFloat3(&vertices[i].position);
+			XMVECTOR p2 = XMLoadFloat3(&vertices[i + 1].position);
+			float distance = XMVectorGetX(XMVector3Length(p1 - p2));
+			vertices[i + 1].texcoord.x = vertices[i].position.x + (n / 2.0f) + distance;
+			//if (distance > 1.1f)
+			//{
+			//	for (int j = 0; j < n - ((i + 1) % n); ++j)
+			//	{
+			//		vertices[j + i + 1].texcoord.x += distance - 1.0f;
+			//	}
+			//}
+		}
+		if (i + n < datapoints)
+		{
+			XMVECTOR p1 = XMLoadFloat3(&vertices[i].position);
+			XMVECTOR p2 = XMLoadFloat3(&vertices[i + n].position);
+			float distance = XMVectorGetX(XMVector3Length(p1 - p2));
+			vertices[i + n].texcoord.y = vertices[i].position.z + (n / 2.0f) + distance;
+			if (distance > 1.0f)
+			{
+				//for (int j = i + n; j < datapoints; j += n)
+				//{
+				//	//vertices[j].texcoord.y += (vertices[j].texcoord.y - vertices[j - n].texcoord.y) * distance;
+				//	vertices[j].texcoord.y = (vertices[j].position.z + n / 2.0f) * distance;
+				//}
+				//vertices[i].texcoord.y -= 0.5f * distance;
+				//vertices[i + n].texcoord.y += 0.5f*distance;
+			}
+		}
+		
 	}
 
 	const Core* core = Core::GetInstance();
-	Mesh m;
-	m.vertexBuffer = core->GetDirect3D11()->CreateVertexBuffer(vertices, datapoints);
-	m.vertexCount = datapoints;
-	m.indexBuffer = core->GetDirect3D11()->CreateIndexBuffer(indices, (n - 1)*(n - 1) * 6);
-	m.indexCount = (n - 1)*(n - 1) * 6;
+	//Mesh m;
+	//m.vertexBuffer = core->GetDirect3D11()->CreateVertexBuffer(vertices, datapoints);
+	//m.vertexCount = datapoints;
+	//m.indexBuffer = core->GetDirect3D11()->CreateIndexBuffer(indices, (n - 1)*(n - 1) * 6);
+	//m.indexCount = (n - 1)*(n - 1) * 6;
 
-	_meshes.push_back(m);
+	//_meshes.push_back(m);
 
+	//const GameObject& go = core->GetGameObject(gameObject);
+	//const_cast<GameObject&>(go).components[Components::MESH] = _meshes.size() - 1;
+
+	//_filenameToIndex[filename] = _meshes.size() - 1;
+
+	_terrains.push_back(TerrainQuadTree(vertices, indices, n));
 	const GameObject& go = core->GetGameObject(gameObject);
-	const_cast<GameObject&>(go).components[Components::MESH] = _meshes.size() - 1;
-
-	_filenameToIndex[filename] = _meshes.size() - 1;
+	const_cast<GameObject&>(go).components[Components::TERRAIN] = _terrains.size() - 1;
 
 	delete[] vertices;
 	delete[] indices;
@@ -335,6 +372,11 @@ Mesh MeshManager::GetMesh(unsigned id) const
 	if(id < _meshes.size())
 		return _meshes[id];
 	return Mesh();
+}
+
+void MeshManager::GetTerrain(unsigned id, std::vector<Mesh>& meshes, const XMMATRIX& scale) const
+{
+	_terrains[id].GetMeshes(meshes, scale);
 }
 
 void MeshManager::_Filter3x3(float** heightmap, const size_t n)

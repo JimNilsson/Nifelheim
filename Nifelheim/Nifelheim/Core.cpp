@@ -229,9 +229,6 @@ void Core::GetRenderBatches(std::vector<Batch>& meshbatches) const
 			indices[i] = -1;
 	}
 
-	
-
-	
 	for (int i = 0; i < size; ++i)
 	{	
 		if (indices[i] >= 0)
@@ -271,5 +268,25 @@ void Core::GetRenderBatches(std::vector<Batch>& meshbatches) const
 	}
 	delete[] indices;
 
+	for (const auto& go : _gameObjects)
+	{
+		if (go.components[Components::TERRAIN] >= 0)
+		{
+			std::vector<Mesh> terrainMeshes;
+			DirectX::XMFLOAT4X4 worldf =_transformManager->GetWorld(go.components[Components::TRANSFORM]);
+			DirectX::XMMATRIX world = XMLoadFloat4x4(&worldf);
+			_meshManager->GetTerrain(go.components[Components::TERRAIN], terrainMeshes,world);
+			for (const auto& m : terrainMeshes)
+			{
+				Batch b;
+				b.job.mesh = m;
+				b.job.textures = _textureManager->GetTextures(go.components[Components::TEXTURES]);
+				b.transforms = new DirectX::XMFLOAT4X4();
+				*b.transforms = _transformManager->GetWorld(go.components[Components::TRANSFORM]);
+				b.jobCount = 1;
+				meshbatches.push_back(b);
+			}
+		}
+	}
 }
 

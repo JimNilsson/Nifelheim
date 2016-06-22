@@ -89,10 +89,10 @@ Direct3D11::~Direct3D11()
 	{
 		SAFE_RELEASE(i);
 	}
-	//for (auto &i : _geometryShaders)
-	//{
-	//	SAFE_RELEASE(i);
-	//}
+	for (auto &i : _geometryShaders)
+	{
+		SAFE_RELEASE(i);
+	}
 	for (auto &i : _pixelShaders)
 	{
 		SAFE_RELEASE(i);
@@ -246,6 +246,13 @@ void Direct3D11::Draw()
 	const Core* core = Core::GetInstance();
 	float clearColor[] = { 0.0f,0.0f,0.0f,0.0f };
 
+	/*********** CRAPP STUFFF*************/
+	if (core->GetInputManager()->WasKeyPressed(KEY_R))
+		_deviceContext->RSSetState(_rasterizerStates[RasterizerStates::RS_WIREFRAME]);
+	if (core->GetInputManager()->WasKeyPressed(KEY_C))
+		_deviceContext->RSSetState(_rasterizerStates[RasterizerStates::RS_CULL_NONE]);
+	/*************************************/
+
 	for (auto &rtv : _renderTargetViews)
 	{
 		_deviceContext->ClearRenderTargetView(rtv, clearColor);
@@ -313,7 +320,9 @@ void Direct3D11::Draw()
 			else
 			{
 				_deviceContext->IASetIndexBuffer(_indexBuffers[b.job.mesh.indexBuffer], DXGI_FORMAT_R32_UINT, 0);
+				//_deviceContext->GSSetShader(_geometryShaders[GeometryShaders::GS_SCALE_UV], nullptr, 0);
 				_deviceContext->DrawIndexedInstanced(b.job.mesh.indexCount, b.jobCount, 0, 0, 0);
+				//_deviceContext->GSSetShader(nullptr, nullptr, 0);
 			}
 		}
 
@@ -394,6 +403,11 @@ void Direct3D11::_CreateShadersAndInputLayouts()
 	hr = D3DCompileFromFile(L"InstancedStaticMeshVS.hlsl", nullptr, nullptr, "main", "vs_5_0",
 		NULL, NULL, &pVS, nullptr);
 	_device->CreateVertexShader(pVS->GetBufferPointer(), pVS->GetBufferSize(), nullptr, &_vertexShaders[VertexShaders::VS_STATIC_MESHES_INSTANCED]);
+	SAFE_RELEASE(pVS);
+
+	hr = D3DCompileFromFile(L"ScaleUVGS.hlsl", nullptr, nullptr, "main", "gs_4_0",
+		NULL, NULL, &pVS, nullptr);
+	_device->CreateGeometryShader(pVS->GetBufferPointer(), pVS->GetBufferSize(), nullptr, &_geometryShaders[GeometryShaders::GS_SCALE_UV]);
 	SAFE_RELEASE(pVS);
 
 }
@@ -481,12 +495,16 @@ void Direct3D11::_CreateRasterizerState()
 	rd.FillMode = D3D11_FILL_SOLID;
 	rd.MultisampleEnable = false;
 	rd.ScissorEnable = false;
-
-	_device->CreateRasterizerState(&rd, &_rasterizerStates[RasterizerStates::RS_CULL_BACK]);
+	
+	HRESULT hr;
+	hr =_device->CreateRasterizerState(&rd, &_rasterizerStates[RasterizerStates::RS_CULL_BACK]);
 
 	rd.CullMode = D3D11_CULL_NONE;
+	hr = _device->CreateRasterizerState(&rd, &_rasterizerStates[RasterizerStates::RS_CULL_NONE]);
 
-	_device->CreateRasterizerState(&rd, &_rasterizerStates[RasterizerStates::RS_CULL_NONE]);
+	rd.FillMode = D3D11_FILL_WIREFRAME;
+	//rd.CullMode = D3D11_CULL_BACK;
+	hr = _device->CreateRasterizerState(&rd, &_rasterizerStates[RasterizerStates::RS_WIREFRAME]);
 
 	_deviceContext->RSSetState(_rasterizerStates[RasterizerStates::RS_CULL_NONE]);
 }

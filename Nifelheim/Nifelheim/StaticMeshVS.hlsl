@@ -39,7 +39,7 @@ VS_OUT main( VS_IN input )
 	VS_OUT output = (VS_OUT)0;
 
 	output.posH =  mul(float4(input.pos, 1.0f), gWVP);
-	output.posVS = mul(float4(input.pos, 1.0f), gWorldView);
+	output.posVS = float4(input.pos, 1.0f);// mul(float4(input.pos, 1.0f), gWorldView);
 	output.tex = input.tex;
 
 	float3 posW = mul(float4(input.pos, 1.0f), gWorld).xyz;

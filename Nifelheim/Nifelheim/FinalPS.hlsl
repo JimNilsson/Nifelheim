@@ -72,7 +72,7 @@ float4 main(VS_OUT input) : SV_TARGET
 	//normal = mul(float4(normal, 0.0f), gInvView);
 	//return float4(normal, 1.0f);
 	float3 diffuse = Diffuse.Sample(AniSam, input.tex).rgb;
-	
+	//return float4(diffuse, 1.0f);
 	float3 pos = posVS.xyz;
 	//float3 col = float3(0.0f, 0.0f, 0.0f);
 	float3 diff = float3(0.0f, 0.0f, 0.0f);
