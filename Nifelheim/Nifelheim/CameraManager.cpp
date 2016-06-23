@@ -160,3 +160,8 @@ DirectX::XMMATRIX CameraManager::GetProj() const
 		_cameras[_activeCamera].nearPlane,
 		_cameras[_activeCamera].farPlane);
 }
+
+DirectX::XMFLOAT3 CameraManager::GetPosition() const
+{
+	return _cameras[_activeCamera].position;
+}

@@ -57,6 +57,7 @@ float NDF_GGX(float NdH, float m)
 float4 main(VS_OUT input) : SV_TARGET
 {
 	float depth = Depth.Sample(AniSam, input.tex).r;
+	
 	float x = input.tex.x * 2.0f - 1.0f;
 	float y = (1.0f - input.tex.y) * 2.0f - 1.0f;
 	float4 projPos = float4(x, y, depth, 1.0f);
@@ -72,6 +73,8 @@ float4 main(VS_OUT input) : SV_TARGET
 	//normal = mul(float4(normal, 0.0f), gInvView);
 	//return float4(normal, 1.0f);
 	float3 diffuse = Diffuse.Sample(AniSam, input.tex).rgb;
+	if (depth > 0.999f)
+		return float4(diffuse, 1.0f);
 	//return float4(diffuse, 1.0f);
 	float3 pos = posVS.xyz;
 	//float3 col = float3(0.0f, 0.0f, 0.0f);

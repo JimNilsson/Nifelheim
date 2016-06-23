@@ -56,7 +56,7 @@ public:
 
 	const std::vector<GameObject>& GetGameObjects() const;
 
-	void GetRenderJobs(std::vector<RenderJob>& renderjobs) const;
+//	void GetRenderJobs(std::vector<RenderJob>& renderjobs) const;
 
 	void GetRenderBatches(std::vector<Batch>& meshbatches) const;
 

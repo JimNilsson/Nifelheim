@@ -51,17 +51,17 @@ int main(int argc, char** argv)
 		core->GetLightManager()->GivePointLight(light, 1.0f, 1.0f, 1.0f, 20.0f, 1.0f);
 		
 
-		float xpos = rand() % 64 - 32;
+		float xpos =static_cast<float>( rand() % 64 - 32);
 		float ypos = 2.0f + 4.0f*((float)rand() / RAND_MAX);
-		float zpos = rand() % 64 - 32;
+		float zpos = static_cast<float>(rand() % 64 - 32);
 		core->GetTransformManager()->CreateTransform(light, xpos, ypos, zpos);
 		
-		int ssomeobject = core->CreateGameObject();
+	/*	int ssomeobject = core->CreateGameObject();
 		core->GetMeshManager()->LoadMesh(ssomeobject, "cube.obj");
 		core->GetTransformManager()->CreateTransform(ssomeobject, xpos, ypos, zpos, 0.1f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f);
 		core->GetTextureManager()->GiveTexture(ssomeobject, "yukieat.png", TextureTypes::TT_DIFFUSE);
 		core->GetTextureManager()->GiveTexture(ssomeobject, "yukieat.png", TextureTypes::TT_NORMAL);
-
+*/
 	}
 	int poslight = core->CreateGameObject();
 	core->GetMeshManager()->LoadMesh(poslight, "cube.obj");

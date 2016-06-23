@@ -227,7 +227,7 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 		return -1;
 	}
 
-	size_t filesize = fin.tellg();
+	size_t filesize = static_cast<size_t>(fin.tellg());
 	size_t datapoints = filesize / byteperpixel;
 	fin.seekg(std::ios_base::beg);
 
@@ -243,7 +243,7 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 	fin.read((char*)&rawData[0], filesize);
 	fin.close();
 	float* heightmap = new float[datapoints];
-	for (int i = 0; i < datapoints; ++i)
+	for (unsigned i = 0; i < datapoints; ++i)
 	{
 		
 		unsigned height = 0;
@@ -283,7 +283,7 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 		}
 	}
 
-	for (int i = 0; i < (n - 1)*(n - 1) * 6; i += 3)
+	for (unsigned i = 0; i < (n - 1)*(n - 1) * 6; i += 3)
 	{
 		XMVECTOR v0 = XMLoadFloat3(&vertices[indices[i]].position);
 		XMVECTOR v1 = XMLoadFloat3(&vertices[indices[i + 1]].position);
@@ -301,7 +301,7 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 		//vertices[indices[i + 2]].texcoord.y *= XMVectorGetX(XMVector3Length(e1));
 	}
 
-	for (int i = 0; i < datapoints; ++i)
+	for (unsigned i = 0; i < datapoints; ++i)
 	{
 		XMStoreFloat3(&vertices[i].normal, XMVector3Normalize(XMLoadFloat3(&vertices[i].normal)));
 		XMVECTOR v = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
@@ -400,7 +400,7 @@ float MeshManager::_Sample3x3(float * heightmap, unsigned x, unsigned z, const s
 	{
 		for (int j = -1; j < 2; ++j)
 		{
-			int index = (x + i)*n + (z + j);
+			unsigned index = (x + i)*n + (z + j);
 			if (index >= 0 && index < max)
 			{
 				sum += heightmap[index];

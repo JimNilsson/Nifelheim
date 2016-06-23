@@ -87,7 +87,7 @@ void TerrainQuadTree::_GetMeshDimensions()
 	_centerZ /= static_cast<float>(_vertexCount);
 
 	_width = 0;
-	for (int i = 0; i < _vertexCount; ++i)
+	for (unsigned i = 0; i < _vertexCount; ++i)
 	{
 		float zw = fabsf(_vertices[i].position.z - _centerZ);
 		float xw = fabsf(_vertices[i].position.x - _centerX);

@@ -29,6 +29,8 @@ public:
 	void SetCameraPosition(float posX, float posY, float posZ);
 	DirectX::XMMATRIX GetView() const;
 	DirectX::XMMATRIX GetProj() const;
+
+	DirectX::XMFLOAT3 GetPosition() const;
 private:
 	std::vector<Camera> _cameras;
 	int _activeCamera;
