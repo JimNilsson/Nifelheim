@@ -15,22 +15,31 @@ int main(int argc, char** argv)
 
 
 	//
-	int cube = core->CreateGameObject();
-	core->GetMeshManager()->LoadMesh(cube, "cube.obj");
-	core->GetTransformManager()->CreateTransform(cube, -5.0f, 0.0f, 4.5f, 3.0f, 3.0f, 3.0f, 0.0f, 0.0f, 0.0f);
-	core->GetTextureManager()->GiveTexture(cube, "yukieat.png", TextureTypes::TT_DIFFUSE);
 
-	int otherCube = core->CreateGameObject();
-	core->GetMeshManager()->LoadMesh(otherCube, "cube.obj");
-	core->GetTransformManager()->CreateTransform(otherCube, 5.0f, 0.0f, 4.5f, 3.0f, 3.0f, 3.0f, 0.0f, 0.0f, 0.0f);
-	core->GetTextureManager()->GiveTexture(otherCube, "megumin.png", TextureTypes::TT_DIFFUSE);
-	core->GetTransformManager()->BindChild(cube, otherCube);
 
 	int thirdCube = core->CreateGameObject();
-	core->GetMeshManager()->LoadMesh(thirdCube, "gudsnes.obj");
-	core->GetTransformManager()->CreateTransform(thirdCube, 0.0f, 5.0f, 4.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-	core->GetTextureManager()->GiveTexture(thirdCube, "goodsnes.png", TextureTypes::TT_DIFFUSE);
-	//core->GetTransformManager()->BindChild(otherCube, thirdCube);
+	core->GetMeshManager()->LoadMesh(thirdCube, "ringbox.obj");
+	core->GetTransformManager()->CreateTransform(thirdCube, 0.0f, 7.0f, 4.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+	core->GetTextureManager()->GiveTexture(thirdCube, "concrete_c.png", TextureTypes::TT_DIFFUSE);
+	core->GetTextureManager()->GiveTexture(thirdCube, "ft_stone01_n.png", TextureTypes::TT_NORMAL);
+
+	int cube = core->CreateGameObject();
+	core->GetMeshManager()->LoadMesh(cube, "cube.obj");
+	core->GetTransformManager()->CreateTransform(cube, 6.0f, 7.0f, 4.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+	core->GetTextureManager()->GiveTexture(cube, "ft_stone01_c.png", TextureTypes::TT_DIFFUSE);
+	core->GetTextureManager()->GiveTexture(cube, "ft_stone01_n.png", TextureTypes::TT_NORMAL);
+
+
+	int anchor = core->CreateGameObject();
+	core->GetTransformManager()->CreateTransform(anchor, 0.0f, 7.0f, 4.5f);
+
+	int spinner = core->CreateGameObject();
+	core->GetLightManager()->GivePointLight(spinner, 0.0f, 0.2f, 1.0f, 40.0f, 1.2f);
+	core->GetTransformManager()->CreateTransform(spinner, 3.0f, 7.0f, 4.5f,0.1f, 0.1f, 0.1f);
+	core->GetTransformManager()->BindChild(anchor, spinner);
+	core->GetMeshManager()->LoadMesh(spinner, "ringbox.obj");
+	core->GetTextureManager()->GiveTexture(spinner, "megumin.png", TextureTypes::TT_DIFFUSE);
+	
 
 	int uglyfuck = core->CreateGameObject();
 	core->GetMeshManager()->LoadMesh(uglyfuck, "uglyfuck.obj");
@@ -39,7 +48,7 @@ int main(int argc, char** argv)
 	core->GetTextureManager()->GiveTexture(uglyfuck, "default_n.png", TextureTypes::TT_NORMAL);
 
 	int terrain = core->CreateGameObject();
-	core->GetMeshManager()->LoadTerrain(terrain, "various257.data", 0.005f, 1.0f);
+	core->GetMeshManager()->LoadTerrain(terrain, "mountains257.data", 0.05f, 1.0f);
 	core->GetTransformManager()->CreateTransform(terrain, 0.0f, 0.0f, 0.0f, 0.25f, 1.0f, 0.25f);
 	core->GetTextureManager()->GiveTexture(terrain, "ft_stone01_c.png", TextureTypes::TT_DIFFUSE);
 	core->GetTextureManager()->GiveTexture(terrain, "ft_stone01_n.png", TextureTypes::TT_NORMAL);
@@ -117,12 +126,23 @@ int main(int argc, char** argv)
 			DebugLogger::AddMsg("Frametime: " + ss.str());
 		}
 
+		if (i->IsKeyDown(KEY_Y))
+			core->GetTransformManager()->Rotate(cube, 0.02 * deltatime, 0.0f, 0.0f);
+		if (i->IsKeyDown(KEY_U))
+			core->GetTransformManager()->Rotate(cube, 0.0f, 0.02 * deltatime, 0.0f);
+		if (i->IsKeyDown(KEY_I))
+			core->GetTransformManager()->Rotate(cube, 0.0f, 0.0f, 0.02 * deltatime);
 
 		if (i->IsKeyDown(KEY_ESCAPE))
 			break;
-		core->GetTransformManager()->Rotate(cube, 0.0000f, 0.00001f, 0.0000f);
-		core->GetTransformManager()->Rotate(otherCube, 0.0f, 0.00002f, 0.0f);
+		
 		//core->GetTransformManager()->Rotate(thirdCube, 0.0f, 0.00003f, 0.0f);
+		if(i->IsKeyDown(KEY_B))
+			core->GetTransformManager()->Rotate(anchor, 0.0f, 0.02f * deltatime, 0.0f);
+		if (i->IsKeyDown(KEY_N))
+			core->GetTransformManager()->Rotate(anchor, 0.0f, 0.0f, 0.02f * deltatime);
+		if (i->IsKeyDown(KEY_M))
+			core->GetTransformManager()->Rotate(anchor, 0.02f * deltatime, 0.0f, 0.0f);
 		core->Update();
 	}
 	Core::ShutDown();

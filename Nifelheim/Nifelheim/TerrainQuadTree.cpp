@@ -46,6 +46,8 @@ void TerrainQuadTree::_GetMeshes(Node * n, std::vector<Mesh>& meshes, const Dire
 	e = XMLoadFloat3(&n->extent);
 	c = XMVector3Transform(c, world);
 	e = XMVector3Transform(e, world);
+	XMMATRIX dirtyhack = XMMatrixScaling(1.10f, 1.10f, 1.10f);
+	e = XMVector3Transform(e, dirtyhack);
 	XMFLOAT3 center, extent;
 	XMStoreFloat3(&center, c);
 	XMStoreFloat3(&extent, e);

@@ -418,6 +418,7 @@ void Direct3D11::Draw()
 	_deviceContext->OMSetRenderTargets(RenderTargets::RT_COUNT + 1, nullRTVs, nullptr);
 	_deviceContext->PSSetShaderResources(0, RenderTargets::RT_COUNT, &_shaderResourceViews[0]);
 	_deviceContext->PSSetShaderResources(RenderTargets::RT_COUNT, 1, &_depth.SRV);
+	_deviceContext->PSSetShaderResources(3, 1, &_textures[fuckballer]);
 
 	_deviceContext->PSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_FRAME]);
 

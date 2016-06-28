@@ -153,13 +153,13 @@
     <None Include="StaticMeshPS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="FinalPS.hlsl">
-      <Filter>Source Files\Shaders</Filter>
-    </None>
     <None Include="SkyboxVS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="SkyboxPS.hlsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="FinalPS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>
