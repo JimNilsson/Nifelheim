@@ -285,10 +285,18 @@ struct PointLight
 	float intensity = 0;
 };
 
+struct DirectionalLight
+{
+	DirectX::XMFLOAT3 direction = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	DirectX::XMFLOAT3 color = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float intensity = 1.0f;
+	float pad = 0.0f;
+};
 
 struct LightComponent
 {
 	int pointLight = -1;
+	int dirLight = -1;
 };
 
 #endif

@@ -85,14 +85,15 @@ enum RasterizerStates
 	RS_WIREFRAME,
 	RS_COUNT
 };
-#define MAX_POINTLIGHTS 512U
+
 struct LightBuffer
 {
 	PointLight pointLights[512];
 	unsigned pointLightCount;
-	float pad;
+	DirectionalLight dirLights[8];
+	unsigned dirLightCount;
+	float pad1;
 	float pad2;
-	float pad3;
 };
 
 struct SkyBuffer

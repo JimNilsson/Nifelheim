@@ -26,8 +26,8 @@ int main(int argc, char** argv)
 	int cube = core->CreateGameObject();
 	core->GetMeshManager()->LoadMesh(cube, "cube.obj");
 	core->GetTransformManager()->CreateTransform(cube, 6.0f, 7.0f, 4.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-	core->GetTextureManager()->GiveTexture(cube, "ft_stone01_c.png", TextureTypes::TT_DIFFUSE);
-	core->GetTextureManager()->GiveTexture(cube, "ft_stone01_n.png", TextureTypes::TT_NORMAL);
+	core->GetTextureManager()->GiveTexture(cube, "wall.png", TextureTypes::TT_DIFFUSE);
+	core->GetTextureManager()->GiveTexture(cube, "wall_n.png", TextureTypes::TT_NORMAL);
 
 
 	int anchor = core->CreateGameObject();
@@ -50,8 +50,11 @@ int main(int argc, char** argv)
 	int terrain = core->CreateGameObject();
 	core->GetMeshManager()->LoadTerrain(terrain, "mountains257.data", 0.05f, 1.0f);
 	core->GetTransformManager()->CreateTransform(terrain, 0.0f, 0.0f, 0.0f, 0.25f, 1.0f, 0.25f);
-	core->GetTextureManager()->GiveTexture(terrain, "ft_stone01_c.png", TextureTypes::TT_DIFFUSE);
-	core->GetTextureManager()->GiveTexture(terrain, "ft_stone01_n.png", TextureTypes::TT_NORMAL);
+	core->GetTextureManager()->GiveTexture(terrain, "grass.png", TextureTypes::TT_DIFFUSE);
+	core->GetTextureManager()->GiveTexture(terrain, "default_n.png", TextureTypes::TT_NORMAL);
+
+	int dirLight = core->CreateGameObject();
+	core->GetLightManager()->GiveDirectionalLight(dirLight, 0.8f, 0.5f, 0.1f, 2.0f, -4.0f, -6.0f, 2.0f);
 
 	for (int i = 0; i < 80; ++i)
 	{

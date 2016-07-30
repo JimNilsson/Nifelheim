@@ -160,60 +160,7 @@ const std::vector<GameObject>& Core::GetGameObjects() const
 {
 	return _gameObjects;
 }
-//
-//void Core::GetRenderJobs(std::vector<RenderJob>& renderjobs) const
-//{
-//	
-//
-//	unsigned highestVBIndex = 0;
-//	for (const auto &o : _gameObjects)
-//	{
-//		if (o.components[Components::MESH] > highestVBIndex)
-//			highestVBIndex = o.components[Components::MESH];
-//	}
-//	++highestVBIndex;
-//	unsigned* nrOfEach = new unsigned[highestVBIndex];
-//	memset(nrOfEach, 0, sizeof(unsigned) * highestVBIndex);
-//	for (const auto &o : _gameObjects)
-//	{
-//		if (o.components[Components::MESH] >= 0)
-//			++nrOfEach[o.components[Components::MESH]];
-//	}
-//
-//	std::vector<std::vector<RenderJob>> rjs(highestVBIndex);
-//	unsigned totalRenderJobs = 0;
-//	for (int i = 0; i < highestVBIndex; ++i)
-//	{
-//		rjs[i].reserve(nrOfEach[i]);
-//		totalRenderJobs += nrOfEach[i];
-//	}
-//	delete[] nrOfEach;
-//	for (const auto &o : _gameObjects)
-//	{
-//		if (o.components[Components::MESH] >= 0)
-//		{
-//			RenderJob rj;
-//			rj.mesh = _meshManager->GetMesh(o.components[Components::MESH]);
-//			if (o.components[Components::TRANSFORM] >= 0)
-//			{
-//				rj.transform = _transformManager->GetWorld(o.components[Components::TRANSFORM]);
-//			}
-//			if (o.components[Components::TEXTURES] >= 0)
-//			{
-//				rj.textures = _textureManager->GetTextures(o.components[Components::TEXTURES]);
-//			}
-//			rjs[rj.mesh.vertexBuffer].push_back(rj);
-//			//renderjobs.push_back(rj);
-//		}
-//	}
-//	renderjobs.resize(totalRenderJobs);
-//	unsigned index = 0;
-//	for (const auto& i : rjs)
-//	{
-//		memcpy(&renderjobs[index], &i[0], sizeof(RenderJob) * i.size());
-//		index += i.size();
-//	}
-//}
+
 
 void Core::GetRenderBatches(std::vector<Batch>& meshbatches) const
 {

@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include "Direct3D11.h"
 #include "Core.h"
 #include "DebugLogger.h"
@@ -232,12 +233,14 @@ int Direct3D11::CreateTexture(const wchar_t * filename)
 	}
 	else if (ws.substr(ws.size() - 4) == L".png")
 	{
-		HRESULT hr = CreateWICTextureFromFile(_device, filename, nullptr, &srv);
+		//HRESULT hr = CreateWICTextureFromFile(_device, filename, nullptr, &srv);
+		HRESULT hr = CreateWICTextureFromFileEx(_device, filename, 0U, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS, false, nullptr, &srv);
 		if (FAILED(hr))
 		{
 			DebugLogger::AddMsg("Failed to create texture from file. (fuck wchar)");
 			return -1;
 		}
+		
 	}
 	else
 	{
@@ -395,14 +398,15 @@ void Direct3D11::Draw()
 
 	
 	const std::vector<PointLight>& pointLights = core->GetLightManager()->GetPointLights();
+	const std::vector<DirectionalLight>& dirLights = core->GetLightManager()->GetDirLights();
+	
 	LightBuffer lb;
-
-	lb.pointLightCount = pointLights.size();
-	if (lb.pointLightCount > MAX_POINTLIGHTS)
-		lb.pointLightCount = MAX_POINTLIGHTS;
-
+	lb.pointLightCount = std::min(pointLights.size(), MAX_POINTLIGHTS);
+	lb.dirLightCount = std::min(dirLights.size(), MAX_DIRLIGHTS);
 	if(lb.pointLightCount > 0)
 		memcpy(&lb.pointLights[0], &pointLights[0], sizeof(PointLight) * lb.pointLightCount);
+	if (lb.dirLightCount > 0)
+		memcpy(&lb.dirLights[0], &dirLights[0], lb.dirLightCount * sizeof(DirectionalLight));
 
 	_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_LIGHTBUFFER], 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubres);
 	memcpy(mappedSubres.pData, &lb, sizeof(lb));

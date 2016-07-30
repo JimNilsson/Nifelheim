@@ -43,7 +43,7 @@ PS_OUT main(VS_OUT input)
 	input.tbn[2] = normalize(input.tbn[2]);
 	float3 normal = NormalMap.Sample(AniSam, input.tex);
 	//float3 normal = float3(0.5f, 0.5f, 1.0f);
-	normal = float3(0.5f, 0.5f, 1.0f);
+	//normal = float3(0.5f, 0.5f, 1.0f);
 	normal = normal * 2.0f - 1.0f;
 	normal = normalize(mul(normal, input.tbn));
 	normal = (normal + 1.0f) * 0.5f;

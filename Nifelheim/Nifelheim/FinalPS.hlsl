@@ -6,6 +6,14 @@ struct PointLight
 	float intensity;
 };
 
+struct DirLight
+{
+	float3 direction;
+	float3 color;
+	float intensity;
+	float pad;
+};
+
 struct VS_OUT
 {
 	float4 pos : SV_POSITION;
@@ -16,6 +24,10 @@ cbuffer LightBuffer : register(b0)
 {
 	PointLight pointLights[512];
 	uint pointLightCount;
+	DirLight dirLights[8];
+	uint dirLightCount;
+	float pad;
+	float pad2;
 }
 
 cbuffer PerFrameBuffer : register(b1)
@@ -81,6 +93,7 @@ float4 main(VS_OUT input) : SV_TARGET
 	float3 normal = normalize((normalSam.xyz * 2.0f) - 1.0f);
 	float metallic = normalSam.w;
 	float4 diffuse = Diffuse.Sample(AniSam, input.tex);
+	float roughness = diffuse.a;
 	if (length(normalSam.xyz) < 0.1f)
 		return float4(diffuse.xyz, 1.0f);
 
@@ -94,64 +107,40 @@ float4 main(VS_OUT input) : SV_TARGET
 	for (uint i = 0; i < pointLightCount; ++i)
 	{
 		float3 lightPos = mul(float4(pointLights[i].position.xyz, 1.0f), gView).xyz;
-		////float3 lightPos = pointLights[i].position;
-		//float3 surfaceToLight = lightPos - pos;
-		//float distance = length(surfaceToLight);
-		//if (distance < pointLights[i].range)
-		//{
-		//	surfaceToLight /= distance;
-		//	float lightAmount = dot(normal, surfaceToLight);
-		//	if (lightAmount > 0.0f)
-		//	{
-		//	
-		//		float attenuation = 1.0f / ((1.0f + distance * 0.7412f) + distance * distance * 0.05f);
-		//		diff += lightAmount * pointLights[i].color * attenuation * pointLights[i].intensity;
-		//		float3 H = normalize(surfaceToLight - normalize(posVS.xyz));
-		//		float NdH = saturate(dot(normal, H));
-		//		spec += pointLights[i].color * pow(NdH, 12.0f) * pointLights[i].intensity * attenuation;
+		//float3 lightPos = pointLights[i].position;
+		float3 surfaceToLight = lightPos - pos;
+		float distance = length(surfaceToLight);
+		if (distance < pointLights[i].range)
+		{
+			surfaceToLight /= distance;
+			float lightAmount = dot(normal, surfaceToLight);
+			if (lightAmount > 0.0f)
+			{
+			
+				float attenuation = 1.0f / ((1.0f + distance * 0.7412f) + distance * distance * 0.05f);
+				diff += lightAmount * pointLights[i].color * attenuation * pointLights[i].intensity * roughness;
+				float3 H = normalize(surfaceToLight - normalize(posVS.xyz));
+				float NdH = saturate(dot(normal, H));
+				spec += pointLights[i].color * pow(NdH, 12.0f) * pointLights[i].intensity * attenuation * (1.0f - roughness);
 
 
-		//	}
-		//}
-		//float F0 = 0.565f;
-		//float roughness = diffuse.a;
-		//float3 l = lightPos - pos;
-		//float distance = length(l);
-		//l /= distance;
-		//float3 v = normalize(-posVS.xyz);
-		//float3 h = normalize(l + v);
-		//float NdL = dot(normal, l);
-		//float NdV = dot(normal, v);
-		//float cNdL = max(NdL, 0.0f);
-		//float cNdV = max(NdV, 0.0f);
-		//float brdfspec = fresnel(F0, h, l) * geometry(normal, h, v, l, roughness) * distribution(normal, h, roughness) / (4.0f * cNdL * cNdV);
-		//float3 colorspec = cNdL * brdfspec * pointLights[i].color;
-		//float3 colordiff = cNdL * diffEnergy(F0, normal, l) * diffuse.rgb * pointLights[i].color;
-		//float dropoff = 1.0f / distance;
-		//plContribution += float3(colorspec + colordiff) * dropoff;
-		//return float4(plContribution, 1.0f);
+			}
+		}
+
 	}
-	//return float4(saturate(plContribution), 1.0f);
-	float4 focal = float4(0.0f, 0.0f, 0.0f, 1.0f);
-	focal = mul(focal, gView);
-	float4 sun = float4(-200.0f, 50.0f, 90.0f, 1.0f);
-	sun = mul(sun, gView);
-	float3 l = normalize(sun - focal);
-	float3 suncol = float3(1.0f, 0.62, 0.0f);
-	//diffuse += diffuse * float3(1.0f, 0.62f,0.0f) * dot(normal, dir) * 2.0f;
 
-	float F0 = 0.0f;
-	float roughness = diffuse.a;
-	float3 v = normalize(-posVS.xyz);
-	float3 h = normalize(l + v);
-	float NdL = dot(normal, l);
-	float NdV = dot(normal, v);
-	float cNdL = max(NdL, 0.0f);
-	float cNdV = max(NdV, 0.0f);
-	float brdfspec = fresnel(F0, h, l) * geometry(normal, h, v, l, roughness) * distribution(normal, h, roughness) / (4.0f * cNdL * cNdV);
-	float3 colorspec = cNdL * brdfspec * suncol;
-	float3 colordiff = cNdL * diffEnergy(F0, normal, l) * diffuse.rgb * suncol;
-	return saturate(float4(colorspec + colordiff, 1.0f));
+	for (uint i = 0; i < dirLightCount; ++i)
+	{
+		float lightAmount = dot(dirLights[i].direction, normal);
+		if (lightAmount > 0.0f)
+		{
+			diff += lightAmount * dirLights[i].color * dirLights[i].intensity * roughness;
+			float3 H = normalize(dirLights[i].direction - normalize(posVS.xyz));
+			float NdH = saturate(dot(normal, H));
+			spec += dirLights[i].color * pow(NdH, 12.0f) * pointLights[i].intensity * (1.0f - roughness);
+		}
+	}
+
 
 	//float3 viewDir = normalize(posVS);
 	//float3 ref = viewDir + (2.0f * normal * dot(normal, -viewDir));
@@ -162,5 +151,5 @@ float4 main(VS_OUT input) : SV_TARGET
 	//	diffuse += NdS * refcol * 0.05f + NdS * diffuse * float3(1.0f,0.62f,0.0f) * 0.9f;
 	//diffuse += 0.05f * refcol;
 	//return saturate(float4(diffuse, 1.0f));
-	//return float4(saturate(diffuse * diff + diffuse * spec + diffuse * 0.2f), 1.0f);
+	return float4(saturate(diffuse * diff + diffuse * spec + diffuse * 0.2f), 1.0f);
 }
