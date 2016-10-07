@@ -57,12 +57,6 @@ public:
 	const std::vector<GameObject>& GetGameObjects() const;
 
 	void GetRenderBatches(std::vector<Batch>& meshbatches) const;
-
-
-
-
-
-	
 };
 
 
