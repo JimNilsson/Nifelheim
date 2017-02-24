@@ -356,6 +356,7 @@ void Direct3D11::Draw()
 				_deviceContext->PSSetShaderResources(0, 1, &_textures[b.job.textures.textures[TextureTypes::TT_DIFFUSE]]);
 			if (b.job.textures.textures[TextureTypes::TT_NORMAL] >= 0)
 				_deviceContext->PSSetShaderResources(1, 1, &_textures[b.job.textures.textures[TextureTypes::TT_NORMAL]]);
+
 			if(b.job.mesh.indexBuffer < 0)
 			{
 				_deviceContext->DrawInstanced(b.job.mesh.vertexCount, b.jobCount, 0, 0);
@@ -363,9 +364,7 @@ void Direct3D11::Draw()
 			else
 			{
 				_deviceContext->IASetIndexBuffer(_indexBuffers[b.job.mesh.indexBuffer], DXGI_FORMAT_R32_UINT, 0);
-				//_deviceContext->GSSetShader(_geometryShaders[GeometryShaders::GS_SCALE_UV], nullptr, 0);
 				_deviceContext->DrawIndexedInstanced(b.job.mesh.indexCount, b.jobCount, 0, 0, 0);
-				//_deviceContext->GSSetShader(nullptr, nullptr, 0);
 			}
 		}
 	}
@@ -401,8 +400,8 @@ void Direct3D11::Draw()
 	const std::vector<DirectionalLight>& dirLights = core->GetLightManager()->GetDirLights();
 	
 	LightBuffer lb;
-	lb.pointLightCount = std::min(pointLights.size(), MAX_POINTLIGHTS);
-	lb.dirLightCount = std::min(dirLights.size(), MAX_DIRLIGHTS);
+	lb.pointLightCount = std::min((uint32_t)pointLights.size(), MAX_POINTLIGHTS);
+	lb.dirLightCount = std::min((uint32_t)dirLights.size(), MAX_DIRLIGHTS);
 	if(lb.pointLightCount > 0)
 		memcpy(&lb.pointLights[0], &pointLights[0], sizeof(PointLight) * lb.pointLightCount);
 	if (lb.dirLightCount > 0)
@@ -413,7 +412,7 @@ void Direct3D11::Draw()
 	_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_LIGHTBUFFER], 0);
 	_deviceContext->PSSetConstantBuffers(0, 1, &_constantBuffers[ConstantBuffers::CB_LIGHTBUFFER]);
 
-
+	int k = sizeof(LightBuffer);
 	_deviceContext->IASetInputLayout(nullptr);
 	_deviceContext->VSSetShader(_vertexShaders[VertexShaders::VS_FULLSCREEN], nullptr, 0);
 	_deviceContext->PSSetShader(_pixelShaders[PixelShaders::PS_FINAL], nullptr, 0);

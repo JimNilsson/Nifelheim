@@ -88,9 +88,9 @@ enum RasterizerStates
 
 struct LightBuffer
 {
-	PointLight pointLights[512];
+	PointLight pointLights[MAX_POINTLIGHTS];
+	DirectionalLight dirLights[MAX_DIRLIGHTS];
 	unsigned pointLightCount;
-	DirectionalLight dirLights[8];
 	unsigned dirLightCount;
 	float pad1;
 	float pad2;

@@ -3,8 +3,7 @@
 
 #include "Structs.h"
 #include <vector>
-#define MAX_POINTLIGHTS 512U
-#define MAX_DIRLIGHTS 8U
+
 class LightManager
 {
 public:

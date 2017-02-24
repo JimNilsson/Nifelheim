@@ -9,8 +9,8 @@ struct PointLight
 struct DirLight
 {
 	float3 direction;
-	float3 color;
 	float intensity;
+	float3 color;
 	float pad;
 };
 
@@ -22,9 +22,9 @@ struct VS_OUT
 
 cbuffer LightBuffer : register(b0)
 {
-	PointLight pointLights[512];
-	uint pointLightCount;
+	PointLight pointLights[64];
 	DirLight dirLights[8];
+	uint pointLightCount;
 	uint dirLightCount;
 	float pad;
 	float pad2;
@@ -129,17 +129,17 @@ float4 main(VS_OUT input) : SV_TARGET
 
 	}
 
-	for (uint i = 0; i < dirLightCount; ++i)
-	{
-		float lightAmount = dot(dirLights[i].direction, normal);
-		if (lightAmount > 0.0f)
-		{
-			diff += lightAmount * dirLights[i].color * dirLights[i].intensity * roughness;
-			float3 H = normalize(dirLights[i].direction - normalize(posVS.xyz));
-			float NdH = saturate(dot(normal, H));
-			spec += dirLights[i].color * pow(NdH, 12.0f) * pointLights[i].intensity * (1.0f - roughness);
-		}
-	}
+	//for (uint i = 0; i < dirLightCount; ++i)
+	//{
+	//	float lightAmount = dot(dirLights[i].direction, normal);
+	//	if (lightAmount > 0.0f)
+	//	{
+	//		diff += lightAmount * dirLights[i].color * dirLights[i].intensity * roughness;
+	//		float3 H = normalize(dirLights[i].direction - normalize(posVS.xyz));
+	//		float NdH = saturate(dot(normal, H));
+	//		spec += dirLights[i].color * pow(NdH, 12.0f) * pointLights[i].intensity * (1.0f - roughness);
+	//	}
+	//}
 
 
 	//float3 viewDir = normalize(posVS);
