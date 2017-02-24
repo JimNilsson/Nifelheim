@@ -2,8 +2,8 @@ struct VS_OUT
 {
 	float3 wPos : POSITION;
 	float3 color : COLOR;
-	float3 lightOrigin;
-	float range;
+	float3 lightOrigin : ORIGIN;
+	float range : RANGE;
 };
 
 struct GS_OUT
@@ -45,7 +45,7 @@ void main(triangle VS_OUT input[3], inout TriangleStream<GS_OUT> output)
 	GS_OUT element;
 	element.uniformDirection = normalize(cross(e1, e2));
 
-	float3 base1 = input[0].input[0].lightOrigin + v1 * input[0].range;
+	float3 base1 = input[0].lightOrigin + v1 * input[0].range;
 	float3 base2 = input[0].lightOrigin + v2 * input[0].range;
 	float3 base3 = input[0].lightOrigin + v3 * input[0].range;
 
@@ -77,9 +77,9 @@ void main(triangle VS_OUT input[3], inout TriangleStream<GS_OUT> output)
 	float shortest2 = min(RayVsPlane(p2, d2, tpn1, dp1), RayVsPlane(p2, d2, tpn3, dp3));
 	float shortest3 = min(RayVsPlane(p3, d3, tpn1, dp1), RayVsPlane(p3, d3, tpn2, dp2));
 
-	float bd1 = RayVsPlane(normalize(p3 - b1), b1, tpn3, dp3);
-	float bd2 = RayVsPlane(normalize(p2 - b2), b2, tpn3, dp3);
-	float bd3 = RayVsPlane(normalize(p1 - b3), b3, tpn3, dp3);
+	float bd1 = RayVsPlane(normalize(p3 - base1), base1, tpn3, dp3);
+	float bd2 = RayVsPlane(normalize(p2 - base2), base2, tpn3, dp3);
+	float bd3 = RayVsPlane(normalize(p1 - base3), base3, tpn3, dp3);
 
 	//First triangle
 	//"tip" of pyramid
@@ -88,7 +88,7 @@ void main(triangle VS_OUT input[3], inout TriangleStream<GS_OUT> output)
 	element.innerDepth = 0.0f;
 	output.Append(element);
 	//Base1
-	element.pos = mul(float4(b1, 1.0f), gViewProj);
+	element.pos = mul(float4(base1, 1.0f), gViewProj);
 	element.color = input[1].color;
 	element.innerDepth = bd1;
 	output.Append(element);
