@@ -168,6 +168,7 @@ enum Components
 	MATERIAL,
 	TEXTURES,
 	LIGHTSOURCE,
+	AUDIO,
 	COMPONENT_COUNT
 };
 
@@ -184,7 +185,7 @@ public:
 	}
 	GameObject(const GameObject& other)
 	{
-		id = other.id;
+		id = GameObject::GenerateID();
 		for (int i = 0; i < Components::COMPONENT_COUNT; ++i)
 		{
 			components[i] = other.components[i];

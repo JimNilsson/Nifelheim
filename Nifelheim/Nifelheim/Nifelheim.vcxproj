@@ -125,6 +125,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AudioManager.cpp" />
     <ClCompile Include="CameraManager.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="DebugLogger.cpp" />
@@ -142,6 +143,7 @@
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioManager.h" />
     <ClInclude Include="CameraManager.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="DebugLogger.h" />

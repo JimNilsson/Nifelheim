@@ -81,23 +81,55 @@ void main(triangle VS_OUT input[3], inout TriangleStream<GS_OUT> output)
 	float bd2 = RayVsPlane(normalize(p2 - base2), base2, tpn3, dp3);
 	float bd3 = RayVsPlane(normalize(p1 - base3), base3, tpn3, dp3);
 
-	//First triangle
-	//"tip" of pyramid
-	element.pos = mul(float4(input[0].lightOrigin, 1.0f), gViewProj);
-	element.color = input[0].color;
+	float3 baseColor = normalize((input[0].color + input[1].color + input[2].color) / 3);
+	float4 basePos = mul(float4(input[0].lightOrigin, 1.0f), gViewProj);
+	//First triangle of first face
+	// Origin, b1, p1
+	//origin
+	element.pos = basePos;
+	element.color = baseColor;
 	element.innerDepth = 0.0f;
 	output.Append(element);
-	//Base1
+	//base1
 	element.pos = mul(float4(base1, 1.0f), gViewProj);
 	element.color = input[1].color;
 	element.innerDepth = bd1;
 	output.Append(element);
-	//Middlebase1
+	//p1
 	element.pos = mul(float4(p1, 1.0f), gViewProj);
 	element.color = (input[1].color + input[0].color) / 2.0f;
 	element.innerDepth = shortest1;
 	output.Append(element);
 	output.RestartStrip();
 
+	//Second triangle of first face
+	//origin
+	element.pos = basePos;
+	element.color = baseColor;
+	element.innerDepth = 0.0f;
+	output.Append(element);
+	//p1
+	element.pos = mul(float4(p1, 1.0f), gViewProj);
+	element.color = (input[1].color + input[0].color) / 2.0f;
+	element.innerDepth = shortest1;
+	output.Append(element);
+	//b2
+	element.pos = mul(float4(base2, 1.0f), gViewProj);
+	element.color = input[1].color;
+	element.innerDepth = bd1;
+	output.Append(element);
+	output.RestartStrip();
+
+	//First triangle of second face
+	//Tip of pyramid
+	element.pos = basePos;
+	element.color = baseColor;
+	element.innerDepth = 0.0f;
+	output.Append(element);
+	//base2
+	element.pos = mul(float4(base2, 1.0f), gViewProj);
+	element.color = input[1].color;
+	element.innerDepth = bd2;
+	output.Append(element);
 
 }
