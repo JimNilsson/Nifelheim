@@ -94,13 +94,20 @@ int main(int argc, char** argv)
 		//core->GetTextureManager()->GiveTexture(someobject, "megumin.png", TextureTypes::TT_DIFFUSE);
 	}
 
+	int soundEmitter = core->CreateGameObject();
+	core->GetAudioManager()->GiveAudio(soundEmitter, "voice.wav");
+	core->GetAudioManager()->Play(soundEmitter);
 	
-
+	int dadada = core->CreateGameObject();
+	core->GetAudioManager()->GiveAudio(dadada, "dadada.wav", AUDIO_ENABLE_LOOPING);
+	core->GetAudioManager()->Play(dadada);
 	InputManager* i = core->GetInputManager();
 	CameraManager* c = core->GetCameraManager();
+	AudioManager* audio = core->GetAudioManager();
 	Timer* t = core->GetTimer();
 	while(true)
 	{
+		audio->Update(0);
 		float deltatime = t->GetDeltaTime();
 		if (i->IsKeyDown(KEY_ARROW_LEFT))
 			c->RotateActiveCamera(0.0f, deltatime * -0.05f, 0.0f);

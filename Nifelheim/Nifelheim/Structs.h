@@ -185,7 +185,7 @@ public:
 	}
 	GameObject(const GameObject& other)
 	{
-		id = GameObject::GenerateID();
+		id = other.id;
 		for (int i = 0; i < Components::COMPONENT_COUNT; ++i)
 		{
 			components[i] = other.components[i];

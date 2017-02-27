@@ -7,6 +7,10 @@ Core* Core::_instance = nullptr;
 
 Core::Core()
 {
+	if (SDL_Init(0) < 0)
+	{
+		throw(std::runtime_error("COuld not init SDL"));
+	}
 	_window = nullptr;
 	_d3d11 = nullptr;
 	_meshManager = nullptr;
@@ -15,10 +19,11 @@ Core::Core()
 	_textureManager = nullptr;
 	_inputManager = nullptr;
 	_timer = nullptr;
+	_audioManager = nullptr;
 }
 Core::~Core()
 {
-
+	SDL_Quit();
 }
 unsigned Core::FindObjectIndex(ObjectID id)
 {
@@ -65,6 +70,7 @@ void Core::ShutDown()
 	SAFE_DELETE(Core::GetInstance()->_inputManager);
 	SAFE_DELETE(Core::GetInstance()->_lightManager);
 	SAFE_DELETE(Core::GetInstance()->_timer);
+	SAFE_DELETE(Core::GetInstance()->_audioManager);
 	delete _instance;
 	_instance = nullptr;
 }
@@ -80,6 +86,7 @@ void Core::Init(uint32_t width, uint32_t height, bool fullscreen)
 	_inputManager = new InputManager();
 	_lightManager = new LightManager();
 	_timer = new Timer();
+	_audioManager = new AudioManager();
 
 }
 
@@ -128,6 +135,11 @@ InputManager * Core::GetInputManager() const
 LightManager * Core::GetLightManager() const
 {
 	return _lightManager;
+}
+
+AudioManager * Core::GetAudioManager() const
+{
+	return _audioManager;
 }
 
 Timer * Core::GetTimer() const
