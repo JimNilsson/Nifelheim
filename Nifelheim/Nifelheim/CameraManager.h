@@ -31,6 +31,8 @@ public:
 	DirectX::XMMATRIX GetProj() const;
 
 	DirectX::XMFLOAT3 GetPosition() const;
+	DirectX::XMFLOAT3 GetForward() const;
+	DirectX::XMFLOAT3 GetUp() const;
 private:
 	std::vector<Camera> _cameras;
 	int _activeCamera;

@@ -30,16 +30,6 @@ void AudioManager::GiveAudio(int gameObject, const std::string & filename, int32
 	auto exists = _audioData.find(filename);
 	if (exists == _audioData.end())
 	{
-		//SNDFILE* sf = nullptr;
-		//SF_INFO info = {};
-		//sf = sf_open(filename.c_str(), SFM_READ, &info);
-		//if (sf == NULL)
-		//	throw std::runtime_error(std::string("Could not open file: ").append(filename));
-		//if (!(info.format & SF_FORMAT_WAV))
-		//{
-		//	sf_close(sf);
-		//	throw std::runtime_error("Sorry we only support wav because just doing an assignment");
-		//}
 		Mix_Chunk* audio = Mix_LoadWAV(filename.c_str());
 		AudioData ad;
 		ad.channels = 2;
@@ -47,15 +37,6 @@ void AudioManager::GiveAudio(int gameObject, const std::string & filename, int32
 		ad.sampleCount = audio->alen;
 		ad.sampleRate = 44100;
 		_chunksToDelete.push_back(audio);
-		//int16_t* rawData = new int16_t[info.frames * info.channels * sizeof(int)];
-		//sf_read_int(sf, (int*)rawData, info.frames * info.channels);
-		//sf_close(sf);
-		//test = rawData;
-		//AudioData ad;
-		//ad.channels = info.channels;
-		//ad.data = (int16_t*)fucker->abuf;
-		//ad.sampleCount = info.frames;
-		//ad.sampleRate = info.samplerate;
 		_audioData[filename] = ad;
 		audioData = &_audioData[filename];
 
@@ -75,6 +56,7 @@ void AudioManager::GiveAudio(int gameObject, const std::string & filename, int32
 	
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
 	const_cast<GameObject&>(go).components[Components::AUDIO] = index;
+	_audioToGameObject[index] = go.id;
 }
 
 void AudioManager::Play(int gameObject)
@@ -104,31 +86,69 @@ void AudioManager::SetFlags(int gameObject, AudioSourceFlags flags)
 	_audioHandles[go.components[Components::AUDIO]].flags = flags;
 }
 
+void AudioManager::SetVolume(int gameObject, uint8_t volume)
+{
+	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
+	_audioHandles[go.components[Components::AUDIO]].volume = volume;
+}
+
+void AudioManager::SetRange(int gameObject, float range)
+{
+	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
+	_audioHandles[go.components[Components::AUDIO]].range = range;
+}
+
 void AudioManager::Update(float dt)
 {
-
+	//Play only a small chunk at a time, while one chunk is playing, load and process the next chunk
 	if (_load)
 	{
+		//Sound volume and panning dependent on active camera
+		CameraManager* cam = Core::GetInstance()->GetCameraManager();
+		DirectX::XMFLOAT3 pos = cam->GetPosition();
+		DirectX::XMFLOAT3 forward = cam->GetForward();
+		DirectX::XMFLOAT3 up = cam->GetUp();
+
+		DirectX::XMVECTOR playerPos = DirectX::XMLoadFloat3(&pos);
+
+		//Zero out the buffer since we will be adding to it rather than replacing it
 		memset(_audioLoadBuffer, 0, AUDIO_CHUNK_SIZE * sizeof(int16_t));
+
+		//Set of sounds that are still active after playing a small chunk.
 		std::set<uint32_t> swapWithCurrent;
+
 		for (auto& h : _currentlyPlaying)
 		{
+			float scalingFactor = 1.0f;
+			//Check if the sound source has a position
+			int gameObjectID = _audioToGameObject[h];
+			const GameObject& go = Core::GetInstance()->GetGameObject(gameObjectID);
+			if (_audioHandles[h].flags & AUDIO_ENABLE_MAX_RANGE && go.components[Components::TRANSFORM] >= 0)
+			{
+				TransformManager* tran = Core::GetInstance()->GetTransformManager();
+				DirectX::XMFLOAT3 soundOrigin = tran->GetPosition(go.components[Components::TRANSFORM]);
+				DirectX::XMVECTOR soundPos = DirectX::XMLoadFloat3(&soundOrigin);
+
+				DirectX::XMVECTOR soundToPlayer = DirectX::XMVectorSubtract(playerPos, soundPos);
+				float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(soundToPlayer));
+				scalingFactor = _audioHandles[h].range / (_audioHandles[h].range + 4.0f * DirectX::XM_PI * distance * distance);
+
+			}
+
 
 			int16_t* curSound = (int16_t*)((uint8_t*)_audioHandles[h].data->data + _audioHandles[h].offset);
 			
 			int upper = (int)std::min((long long)AUDIO_CHUNK_SIZE, _audioHandles[h].data->sampleCount - _audioHandles[h].offset);
-			//memcpy(_audioLoadBuffer, curSound, upper * sizeof(int16_t));
 			for (int i = 0; i < upper; i++)
 			{
-				_audioLoadBuffer[i] += (_audioHandles[h].volume / 128.0f) * curSound[i];
+				_audioLoadBuffer[i] += (_audioHandles[h].volume / 128.0f) * scalingFactor * curSound[i];
 			}
 			if (_audioHandles[h].flags & AUDIO_ENABLE_LOOPING)
 			{
 				curSound = (int16_t*)_audioHandles[h].data->data;
-				//memcpy(&_audioLoadBuffer[upper], curSound, (AUDIO_CHUNK_SIZE - upper) * sizeof(int16_t));
-				for (int i = upper; i < AUDIO_CHUNK_SIZE; i++)
+				for (int i = upper, j = 0; i < AUDIO_CHUNK_SIZE; i++, j++)
 				{
-					_audioLoadBuffer[i] += (_audioHandles[h].volume / 128.0f) * curSound[i];
+					_audioLoadBuffer[i] += (_audioHandles[h].volume / 128.0f) * scalingFactor * curSound[j];
 				}
 			}
 			_audioHandles[h].offset = (_audioHandles[h].offset + AUDIO_CHUNK_SIZE*sizeof(int16_t)) % _audioHandles[h].data->sampleCount;

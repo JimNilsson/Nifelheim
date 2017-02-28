@@ -99,7 +99,10 @@ int main(int argc, char** argv)
 	core->GetAudioManager()->Play(soundEmitter);
 	
 	int dadada = core->CreateGameObject();
-	core->GetAudioManager()->GiveAudio(dadada, "dadada.wav", AUDIO_ENABLE_LOOPING);
+	core->GetAudioManager()->GiveAudio(dadada, "dadada.wav", AUDIO_ENABLE_LOOPING | AUDIO_ENABLE_MAX_RANGE);
+	core->GetMeshManager()->LoadMesh(dadada, "cube.obj");
+	core->GetTextureManager()->GiveTexture(dadada, "megumin.png", TextureTypes::TT_DIFFUSE);
+	core->GetTransformManager()->CreateTransform(dadada, 0, 0, 0);
 	core->GetAudioManager()->Play(dadada);
 	InputManager* i = core->GetInputManager();
 	CameraManager* c = core->GetCameraManager();
@@ -142,6 +145,19 @@ int main(int argc, char** argv)
 			core->GetTransformManager()->Rotate(cube, 0.0f, 0.02 * deltatime, 0.0f);
 		if (i->IsKeyDown(KEY_I))
 			core->GetTransformManager()->Rotate(cube, 0.0f, 0.0f, 0.02 * deltatime);
+
+		if (i->IsKeyDown(KEY_NUMPAD_4))
+			core->GetTransformManager()->Translate(dadada, deltatime*4.0f, 0.0f, 0.0f);
+		if (i->IsKeyDown(KEY_NUMPAD_6))
+			core->GetTransformManager()->Translate(dadada, -deltatime*4.0f, 0.0f, 0.0f);
+		if (i->IsKeyDown(KEY_NUMPAD_8))
+			core->GetTransformManager()->Translate(dadada, 0.0f, 0.0f, deltatime*4.0f);
+		if (i->IsKeyDown(KEY_NUMPAD_2))
+			core->GetTransformManager()->Translate(dadada, 0.0f, 0.0f, -deltatime*4.0f);
+		if (i->IsKeyDown(KEY_NUMPAD_7))
+			core->GetTransformManager()->Translate(dadada, 0.0f, deltatime*4.0f, 0.0f);
+		if (i->IsKeyDown(KEY_NUMPAD_9))
+			core->GetTransformManager()->Translate(dadada, 0.0f, -deltatime*4.0f, 0.0f);
 
 		if (i->IsKeyDown(KEY_ESCAPE))
 			break;

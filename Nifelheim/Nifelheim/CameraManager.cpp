@@ -165,3 +165,13 @@ DirectX::XMFLOAT3 CameraManager::GetPosition() const
 {
 	return _cameras[_activeCamera].position;
 }
+
+DirectX::XMFLOAT3 CameraManager::GetForward() const
+{
+	return _cameras[_activeCamera].forward;
+}
+
+DirectX::XMFLOAT3 CameraManager::GetUp() const
+{
+	return _cameras[_activeCamera].up;
+}

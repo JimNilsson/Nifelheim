@@ -1,7 +1,7 @@
 #ifndef _AUDIO_MANAGER_H_
 #define _AUDIO_MANAGER_H_
 
-#define AUDIO_CHUNK_SIZE 4096*4
+#define AUDIO_CHUNK_SIZE 4096*2
 
 #include <DirectXMath.h>
 #include <unordered_map>
@@ -30,19 +30,14 @@ public:
 	void Stop(int gameObject);
 	void Pause(int gameObject);
 	void SetFlags(int gameObject, AudioSourceFlags flags);
+	void SetVolume(int gameObject, uint8_t volume);
+	void SetRange(int gameObject, float range);
 	void Update(float dt);
 
 private:
 
 
-	struct SoundReceiver
-	{
-		DirectX::XMFLOAT3 position;
-		DirectX::XMFLOAT3 forward;
-		DirectX::XMFLOAT3 right;
-	};
 
-	SoundReceiver receiver;
 
 	struct AudioData
 	{
@@ -58,8 +53,10 @@ private:
 		int32_t flags = 0;
 		uint32_t offset = 0; //WHich sample in the file we're at.
 		uint8_t volume = 128;
+		float range = 50.0f;
 	};
 	std::unordered_map<std::string, AudioData> _audioData;
+	std::unordered_map<uint32_t, int32_t> _audioToGameObject;
 	std::vector<AudioHandle> _audioHandles;
 	std::set<uint32_t> _currentlyPlaying;
 	std::vector<Mix_Chunk*> _chunksToDelete;
