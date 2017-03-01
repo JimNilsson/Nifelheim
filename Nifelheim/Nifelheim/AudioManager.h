@@ -3,6 +3,8 @@
 
 #define AUDIO_CHUNK_SIZE 4096*2
 
+#define FRAMES_PER_BUFFER 1024
+
 #include <DirectXMath.h>
 #include <unordered_map>
 #include <vector>
@@ -10,6 +12,8 @@
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sndfile.h>
+#include <portaudio.h>
 
 #include <SDL_mixer.h>
 enum AudioSourceFlags : int32_t
@@ -34,11 +38,20 @@ public:
 	void SetRange(int gameObject, float range);
 	void Update(float dt);
 
+	static int paCallback(const void* input,
+		void* output,
+		unsigned long frameCount,
+		const PaStreamCallbackTimeInfo* timeInfo,
+		PaStreamCallbackFlags statusFlags,
+		void* userData);
+
 private:
+	std::vector<PaStream*> _paStreams;
+	PaStream *paStream;
+	PaError error;
 
-
-
-
+	int16_t lp = 0;
+	int16_t rp = 0;
 	struct AudioData
 	{
 		int16_t* data = nullptr;
@@ -53,8 +66,10 @@ private:
 		int32_t flags = 0;
 		uint32_t offset = 0; //WHich sample in the file we're at.
 		uint8_t volume = 128;
-		float range = 50.0f;
+		float range = 150.0f;
+		int gameObject;
 	};
+	std::unordered_map<int, PaStream*> _objectToStream;
 	std::unordered_map<std::string, AudioData> _audioData;
 	std::unordered_map<uint32_t, int32_t> _audioToGameObject;
 	std::vector<AudioHandle> _audioHandles;

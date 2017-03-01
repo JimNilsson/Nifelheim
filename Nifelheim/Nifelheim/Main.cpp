@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 	core->GetAudioManager()->Play(soundEmitter);
 	
 	int dadada = core->CreateGameObject();
-	core->GetAudioManager()->GiveAudio(dadada, "dadada.wav", AUDIO_ENABLE_LOOPING | AUDIO_ENABLE_MAX_RANGE);
+	core->GetAudioManager()->GiveAudio(dadada, "guitar.wav", AUDIO_ENABLE_LOOPING | AUDIO_ENABLE_MAX_RANGE | AUDIO_ENABLE_STEREO_PANNING);
 	core->GetMeshManager()->LoadMesh(dadada, "cube.obj");
 	core->GetTextureManager()->GiveTexture(dadada, "megumin.png", TextureTypes::TT_DIFFUSE);
 	core->GetTransformManager()->CreateTransform(dadada, 0, 0, 0);
@@ -110,7 +110,6 @@ int main(int argc, char** argv)
 	Timer* t = core->GetTimer();
 	while(true)
 	{
-		audio->Update(0);
 		float deltatime = t->GetDeltaTime();
 		if (i->IsKeyDown(KEY_ARROW_LEFT))
 			c->RotateActiveCamera(0.0f, deltatime * -0.05f, 0.0f);
