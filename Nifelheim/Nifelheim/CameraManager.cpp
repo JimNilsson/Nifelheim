@@ -18,7 +18,7 @@ CameraManager::CameraManager()
 	defaultCam.forward = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	defaultCam.up = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	defaultCam.nearPlane = 0.1f;
-	defaultCam.farPlane = 100.0f;
+	defaultCam.farPlane = 200.0f;
 	defaultCam.position = XMFLOAT3(0.0f, 0.0f, -11.0f);
 	_cameras.push_back(defaultCam);
 

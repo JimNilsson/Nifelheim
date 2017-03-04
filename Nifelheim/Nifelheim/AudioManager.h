@@ -16,6 +16,11 @@
 #include <portaudio.h>
 
 #include <SDL_mixer.h>
+
+typedef void AudioFilter(const void * source, void* output, unsigned long frameCount);
+
+void Filter(const void* source, void* output, unsigned long frameCount);
+
 enum AudioSourceFlags : int32_t
 {
 	AUDIO_ENABLE_STEREO_PANNING = 1 << 0,
@@ -37,6 +42,8 @@ public:
 	void SetVolume(int gameObject, uint8_t volume);
 	void SetRange(int gameObject, float range);
 	void Update(float dt);
+	void SetFilter(int gameObject, AudioFilter* filter);
+	void ClearFilters(int gameObject);
 
 	static int paCallback(const void* input,
 		void* output,
@@ -44,6 +51,8 @@ public:
 		const PaStreamCallbackTimeInfo* timeInfo,
 		PaStreamCallbackFlags statusFlags,
 		void* userData);
+
+	
 
 private:
 	std::vector<PaStream*> _paStreams;
@@ -68,7 +77,9 @@ private:
 		uint8_t volume = 128;
 		float range = 150.0f;
 		int gameObject;
+		std::vector<AudioFilter*> audioFilters;
 	};
+	std::vector<AudioFilter*> _globalFilters;
 	std::unordered_map<int, PaStream*> _objectToStream;
 	std::unordered_map<std::string, AudioData> _audioData;
 	std::unordered_map<uint32_t, int32_t> _audioToGameObject;

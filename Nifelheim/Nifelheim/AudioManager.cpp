@@ -86,7 +86,7 @@ void AudioManager::GiveAudio(int gameObject, const std::string & filename, int32
 	_audioHandles.push_back(handle);
 
 	_objectToStream[gameObject];
-	Pa_OpenDefaultStream(&_objectToStream[gameObject], 0, 2, paInt16, 88200.0, (unsigned long)FRAMES_PER_BUFFER, paCallback, (void*)&_audioHandles[index]);
+	Pa_OpenDefaultStream(&_objectToStream[gameObject], 0, 2, paInt16, audioData->sampleRate * audioData->channels, (unsigned long)FRAMES_PER_BUFFER, paCallback, (void*)&_audioHandles[index]);
 	
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
 	const_cast<GameObject&>(go).components[Components::AUDIO] = index;
@@ -112,9 +112,8 @@ void AudioManager::Stop(int gameObject)
 
 void AudioManager::Pause(int gameObject)
 {
-	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
-//	auto g = _currentlyPlaying.find(go.components[Components::AUDIO]);
-//	_currentlyPlaying.erase(go.components[Components::AUDIO]);
+	Pa_StopStream(_objectToStream[gameObject]);
+
 }
 
 void AudioManager::SetFlags(int gameObject, AudioSourceFlags flags)
@@ -244,9 +243,23 @@ void AudioManager::Update(float dt)
 
 }
 
+void AudioManager::SetFilter(int gameObject, AudioFilter * filter)
+{
+	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
+	_audioHandles[go.components[Components::AUDIO]].audioFilters.push_back(filter);
+}
+
+void AudioManager::ClearFilters(int gameObject)
+{
+	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
+	_audioHandles[go.components[Components::AUDIO]].audioFilters.clear();
+}
+
 int AudioManager::paCallback(const void * input, void * output, unsigned long frameCount, const PaStreamCallbackTimeInfo * timeInfo, PaStreamCallbackFlags statusFlags, void * userData)
 {
 	AudioHandle* handle = (AudioHandle*)userData;
+	int16_t outBuffer[4096];//Used for filters
+	int16_t inBuffer[4096];//Used for filters
 
 	//Sound volume and panning dependent on active camera
 	CameraManager* cam = Core::GetInstance()->GetCameraManager();
@@ -267,14 +280,15 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 		TransformManager* tran = Core::GetInstance()->GetTransformManager();
 		DirectX::XMFLOAT3 soundOrigin = tran->GetPosition(go.components[Components::TRANSFORM]);
 		DirectX::XMVECTOR soundPos = DirectX::XMLoadFloat3(&soundOrigin);
-
 		DirectX::XMVECTOR soundToPlayer = DirectX::XMVectorSubtract(playerPos, soundPos);
+
 		if (handle->flags & AUDIO_ENABLE_MAX_RANGE)
 		{
 			float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(soundToPlayer));
 			scalingFactor = handle->range / (handle->range + 4.0f * DirectX::XM_PI * distance * distance);
 		}
 
+		
 		if (handle->flags & AUDIO_ENABLE_STEREO_PANNING)
 		{
 			DirectX::XMVECTOR xzPlane = DirectX::XMVectorSet(0, 1, 0, 0);
@@ -290,10 +304,12 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 
 			float cosOfAngle = DirectX::XMVectorGetX(DirectX::XMVector3Dot(playerForward, playerToSound));
 			float angle = std::acos(cosOfAngle);
-			//If the cross product points "up", the sound is to the right
-			DirectX::XMVECTOR leftOrRight = DirectX::XMVector3Cross(playerForward, playerToSound);
+			
 			rightScale = (sqrt(2) / 2.0f)*(cosOfAngle - std::sin(angle));
 			leftScale = (sqrt(2) / 2.0f)*(cosOfAngle + std::sin(angle));
+
+			//If the cross product points "down", the sound is to the left
+			DirectX::XMVECTOR leftOrRight = DirectX::XMVector3Cross(playerForward, playerToSound);
 			if (DirectX::XMVectorGetY(leftOrRight) < 0)
 			{
 				std::swap(rightScale, leftScale);
@@ -306,6 +322,13 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 	int16_t* out = (int16_t*)output;
 	int upper = (int)std::min((long long)frameCount, handle->data->sampleCount*2 - handle->offset);
 	int16_t* curSound = (int16_t*)((uint8_t*)handle->data->data + handle->offset);
+	memcpy(inBuffer, curSound, sizeof(int16_t) * 4096);
+	for (auto& filter : handle->audioFilters)
+	{
+		filter(inBuffer, outBuffer, upper);
+		memcpy(inBuffer, outBuffer, sizeof(int16_t) * 4096);
+	}
+	curSound = inBuffer;
 	for (int i = 0; i < upper; i++)
 	{		
 		*out++ = distanceCorrectedVolume * rightScale * curSound[i];
@@ -329,5 +352,37 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 		return 1;
 
 	return 0;
+}
+
+void Filter(const void * source, void * output, unsigned long frameCount)
+{
+	float taps[] = {
+		(1.0f / 10.0f),
+		(1.0f / 10.0f),
+		(1.0f / 10.0f),
+		(1.0f / 10.0f),
+		(1.0f / 10.0f),
+		(1.0f / 10.0f),
+		(1.0f / 10.0f),
+		(1.0f / 10.0f),
+		(1.0f / 10.0f),
+		(1.0f / 10.0f),
+
+	};
+
+	int16_t* in = (int16_t*)source;
+	int16_t* out = (int16_t*)output;
+
+
+	for (int i = 0; i < frameCount; i++)
+	{
+		int k = i;
+		for (auto & tap : taps)
+		{
+			*out += in[k++] * tap;
+		}
+		*out++;
+	}
+	
 }
 

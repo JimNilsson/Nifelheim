@@ -41,15 +41,9 @@ int main(int argc, char** argv)
 	core->GetTextureManager()->GiveTexture(spinner, "megumin.png", TextureTypes::TT_DIFFUSE);
 	
 
-	int uglyfuck = core->CreateGameObject();
-	core->GetMeshManager()->LoadMesh(uglyfuck, "uglyfuck.obj");
-	core->GetTransformManager()->CreateTransform(uglyfuck, 5.0f, 0.5f, 5.0f,0.25f,0.25f,0.25f);
-	core->GetTextureManager()->GiveTexture(uglyfuck, "ft_stone01_c.png", TextureTypes::TT_DIFFUSE);
-	core->GetTextureManager()->GiveTexture(uglyfuck, "default_n.png", TextureTypes::TT_NORMAL);
-
 	int terrain = core->CreateGameObject();
 	core->GetMeshManager()->LoadTerrain(terrain, "mountains257.data", 0.05f, 1.0f);
-	core->GetTransformManager()->CreateTransform(terrain, 0.0f, 0.0f, 0.0f, 0.25f, 1.0f, 0.25f);
+	core->GetTransformManager()->CreateTransform(terrain, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
 	core->GetTextureManager()->GiveTexture(terrain, "grass.png", TextureTypes::TT_DIFFUSE);
 	core->GetTextureManager()->GiveTexture(terrain, "default_n.png", TextureTypes::TT_NORMAL);
 
@@ -68,17 +62,7 @@ int main(int argc, char** argv)
 		float zpos = static_cast<float>(rand() % 64 - 32);
 		core->GetTransformManager()->CreateTransform(light, xpos, ypos, zpos);
 		
-	/*	int ssomeobject = core->CreateGameObject();
-		core->GetMeshManager()->LoadMesh(ssomeobject, "cube.obj");
-		core->GetTransformManager()->CreateTransform(ssomeobject, xpos, ypos, zpos, 0.1f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f);
-		core->GetTextureManager()->GiveTexture(ssomeobject, "yukieat.png", TextureTypes::TT_DIFFUSE);
-		core->GetTextureManager()->GiveTexture(ssomeobject, "yukieat.png", TextureTypes::TT_NORMAL);
-*/
 	}
-	int poslight = core->CreateGameObject();
-	core->GetMeshManager()->LoadMesh(poslight, "cube.obj");
-	core->GetTransformManager()->CreateTransform(poslight, 0.0f, 0.0f, 0.0f);
-	core->GetTextureManager()->GiveTexture(poslight, "megumin.png", TextureTypes::TT_DIFFUSE);
 
 	for (int i = 0; i < 400; ++i)
 	{
@@ -87,11 +71,6 @@ int main(int argc, char** argv)
 		core->GetTransformManager()->CreateTransform(someobject, i % 20, 0.0f, i / 20, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
 		core->GetTextureManager()->GiveTexture(someobject, "ft_stone01_c.png", TextureTypes::TT_DIFFUSE);
 		core->GetTextureManager()->GiveTexture(someobject, "ft_stone01_n.png", TextureTypes::TT_NORMAL);
-
-		//someobject = core->CreateGameObject();
-		//core->GetMeshManager()->LoadMesh(someobject, "ringbox.obj");
-		//core->GetTransformManager()->CreateTransform(someobject, rand() % 20, rand() % 20, rand() % 20, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-		//core->GetTextureManager()->GiveTexture(someobject, "megumin.png", TextureTypes::TT_DIFFUSE);
 	}
 
 	int soundEmitter = core->CreateGameObject();
@@ -118,9 +97,9 @@ int main(int argc, char** argv)
 	core->GetAudioManager()->GiveAudio(thingamajig, "siren.wav", AUDIO_ENABLE_LOOPING | AUDIO_ENABLE_MAX_RANGE | AUDIO_ENABLE_STEREO_PANNING);
 	core->GetAudioManager()->SetVolume(thingamajig, 127);
 	core->GetAudioManager()->SetRange(thingamajig, 400);
-	core->GetMeshManager()->LoadMesh(thingamajig, "cube.obj");
-	core->GetTextureManager()->GiveTexture(thingamajig, "volume.png", TextureTypes::TT_DIFFUSE);
-	core->GetTransformManager()->CreateTransform(thingamajig, 20, 15, 0);
+	core->GetMeshManager()->LoadMesh(thingamajig, "speakers.obj");
+	core->GetTextureManager()->GiveTexture(thingamajig, "speaker.png", TextureTypes::TT_DIFFUSE);
+	core->GetTransformManager()->CreateTransform(thingamajig, 20, 5, 0,0.01f,0.01f,0.01f);
 	core->GetAudioManager()->Play(thingamajig);
 	InputManager* i = core->GetInputManager();
 	CameraManager* c = core->GetCameraManager();
@@ -151,20 +130,18 @@ int main(int argc, char** argv)
 			c->MoveUp(deltatime * 4.0f);
 		if (i->IsKeyDown(KEY_LCTRL))
 			c->MoveUp(deltatime*-4.0f);
+
+		if (i->WasKeyPressed(KEY_F))
+			audio->SetFilter(soundEmitter, Filter);
+		if (i->WasKeyPressed(KEY_G))
+			audio->ClearFilters(soundEmitter);
+
 		if (i->WasKeyPressed(KEY_K))
 		{
 			std::stringstream ss;
 			ss << deltatime;
 			DebugLogger::AddMsg("Frametime: " + ss.str());
 		}
-		if (i->IsKeyDown(KEY_N))
-			core->GetTransformManager()->Rotate(cave, 0, 5*deltatime, 0);
-		if (i->IsKeyDown(KEY_Y))
-			core->GetTransformManager()->Rotate(cube, 5 * deltatime, 0.0f, 0.0f);
-		if (i->IsKeyDown(KEY_U))
-			core->GetTransformManager()->Rotate(cube, 0.0f, 5 * deltatime, 0.0f);
-		if (i->IsKeyDown(KEY_I))
-			core->GetTransformManager()->Rotate(cube, 0.0f, 0.0f, 5 * deltatime);
 
 		if (i->IsKeyDown(KEY_NUMPAD_4))
 			core->GetTransformManager()->Translate(dadada, deltatime*4.0f, 0.0f, 0.0f);
