@@ -95,21 +95,41 @@ int main(int argc, char** argv)
 	}
 
 	int soundEmitter = core->CreateGameObject();
-	core->GetAudioManager()->GiveAudio(soundEmitter, "voice.wav");
+	core->GetAudioManager()->GiveAudio(soundEmitter, "callofmagic.wav", AUDIO_ENABLE_LOOPING);
+	core->GetAudioManager()->SetVolume(soundEmitter, 30);
 	core->GetAudioManager()->Play(soundEmitter);
 	
+
+	int cave = core->CreateGameObject();
+	core->GetMeshManager()->LoadMesh(cave, "cave.obj");
+	core->GetTextureManager()->GiveTexture(cave, "concrete_c.png", TextureTypes::TT_DIFFUSE);
+	core->GetTransformManager()->CreateTransform(cave, -15, 6, -5, 4, 4, 4,0,100,0);
+
 	int dadada = core->CreateGameObject();
-	core->GetAudioManager()->GiveAudio(dadada, "guitar.wav", AUDIO_ENABLE_LOOPING | AUDIO_ENABLE_MAX_RANGE | AUDIO_ENABLE_STEREO_PANNING);
+	core->GetAudioManager()->GiveAudio(dadada, "ooga.wav", AUDIO_ENABLE_MAX_RANGE | AUDIO_ENABLE_STEREO_PANNING);
+	core->GetAudioManager()->SetVolume(dadada, 255);
+	core->GetAudioManager()->SetRange(dadada, 400);
 	core->GetMeshManager()->LoadMesh(dadada, "cube.obj");
-	core->GetTextureManager()->GiveTexture(dadada, "megumin.png", TextureTypes::TT_DIFFUSE);
+	core->GetTextureManager()->GiveTexture(dadada, "neanderthal.png", TextureTypes::TT_DIFFUSE);
 	core->GetTransformManager()->CreateTransform(dadada, 0, 0, 0);
 	core->GetAudioManager()->Play(dadada);
+
+	int thingamajig = core->CreateGameObject();
+	core->GetAudioManager()->GiveAudio(thingamajig, "siren.wav", AUDIO_ENABLE_LOOPING | AUDIO_ENABLE_MAX_RANGE | AUDIO_ENABLE_STEREO_PANNING);
+	core->GetAudioManager()->SetVolume(thingamajig, 127);
+	core->GetAudioManager()->SetRange(thingamajig, 400);
+	core->GetMeshManager()->LoadMesh(thingamajig, "cube.obj");
+	core->GetTextureManager()->GiveTexture(thingamajig, "volume.png", TextureTypes::TT_DIFFUSE);
+	core->GetTransformManager()->CreateTransform(thingamajig, 20, 15, 0);
+	core->GetAudioManager()->Play(thingamajig);
 	InputManager* i = core->GetInputManager();
 	CameraManager* c = core->GetCameraManager();
 	AudioManager* audio = core->GetAudioManager();
 	Timer* t = core->GetTimer();
 	while(true)
 	{
+		if (i->WasKeyPressed(KEY_G))
+			audio->Play(dadada);
 		float deltatime = t->GetDeltaTime();
 		if (i->IsKeyDown(KEY_ARROW_LEFT))
 			c->RotateActiveCamera(0.0f, deltatime * -0.05f, 0.0f);
@@ -137,13 +157,14 @@ int main(int argc, char** argv)
 			ss << deltatime;
 			DebugLogger::AddMsg("Frametime: " + ss.str());
 		}
-
+		if (i->IsKeyDown(KEY_N))
+			core->GetTransformManager()->Rotate(cave, 0, 5*deltatime, 0);
 		if (i->IsKeyDown(KEY_Y))
-			core->GetTransformManager()->Rotate(cube, 0.02 * deltatime, 0.0f, 0.0f);
+			core->GetTransformManager()->Rotate(cube, 5 * deltatime, 0.0f, 0.0f);
 		if (i->IsKeyDown(KEY_U))
-			core->GetTransformManager()->Rotate(cube, 0.0f, 0.02 * deltatime, 0.0f);
+			core->GetTransformManager()->Rotate(cube, 0.0f, 5 * deltatime, 0.0f);
 		if (i->IsKeyDown(KEY_I))
-			core->GetTransformManager()->Rotate(cube, 0.0f, 0.0f, 0.02 * deltatime);
+			core->GetTransformManager()->Rotate(cube, 0.0f, 0.0f, 5 * deltatime);
 
 		if (i->IsKeyDown(KEY_NUMPAD_4))
 			core->GetTransformManager()->Translate(dadada, deltatime*4.0f, 0.0f, 0.0f);

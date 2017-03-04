@@ -62,7 +62,7 @@ private:
 
 	struct AudioHandle
 	{
-		AudioData* data = nullptr; //Borrows a pointer form Mix_Chunk, dont delete
+		AudioData* data = nullptr; 
 		int32_t flags = 0;
 		uint32_t offset = 0; //WHich sample in the file we're at.
 		uint8_t volume = 128;
@@ -73,8 +73,8 @@ private:
 	std::unordered_map<std::string, AudioData> _audioData;
 	std::unordered_map<uint32_t, int32_t> _audioToGameObject;
 	std::vector<AudioHandle> _audioHandles;
-	std::set<uint32_t> _currentlyPlaying;
-	std::vector<Mix_Chunk*> _chunksToDelete;
+//	std::set<uint32_t> _currentlyPlaying;
+//	std::vector<Mix_Chunk*> _chunksToDelete;
 
 	int16_t _audioPlayBuffer[AUDIO_CHUNK_SIZE] = {};
 	int16_t _audioLoadBuffer[AUDIO_CHUNK_SIZE] = {};

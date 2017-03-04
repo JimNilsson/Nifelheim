@@ -61,6 +61,7 @@ Core* Core::GetInstance()
 
 void Core::ShutDown()
 {
+	SAFE_DELETE(Core::GetInstance()->_audioManager);
 	SAFE_DELETE(Core::GetInstance()->_window);
 	SAFE_DELETE(Core::GetInstance()->_d3d11);
 	SAFE_DELETE(Core::GetInstance()->_meshManager);
@@ -70,7 +71,7 @@ void Core::ShutDown()
 	SAFE_DELETE(Core::GetInstance()->_inputManager);
 	SAFE_DELETE(Core::GetInstance()->_lightManager);
 	SAFE_DELETE(Core::GetInstance()->_timer);
-	SAFE_DELETE(Core::GetInstance()->_audioManager);
+
 	delete _instance;
 	_instance = nullptr;
 }

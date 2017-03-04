@@ -14,9 +14,9 @@ TransformManager::~TransformManager()
 const unsigned TransformManager::CreateTransform(const int gameObject, float posX, float posY, float posZ, float scaleX, float scaleY, float scaleZ, float rotX, float rotY, float rotZ)
 {
 	Transform trans;
-	rotX *= 180.0f / XM_PI;
-	rotY *= 180.0f / XM_PI;
-	rotZ *= 180.0f / XM_PI;
+	rotX *= XM_PI / 180.0f;
+	rotY *= XM_PI / 180.0f;
+	rotZ *= XM_PI / 180.0f;
 	trans.translation = XMFLOAT3(posX, posY, posZ);
 	trans.scale = XMFLOAT3(scaleX, scaleY, scaleZ);
 	trans.rotation = XMFLOAT3(rotX, rotY, rotZ);
@@ -24,7 +24,7 @@ const unsigned TransformManager::CreateTransform(const int gameObject, float pos
 	
 	
 	XMMATRIX t = XMMatrixTranslation(posX, posY, posZ);
-	XMMATRIX r = XMMatrixRotationRollPitchYaw(rotZ, rotX, rotY);
+	XMMATRIX r = XMMatrixRotationRollPitchYaw(rotX, rotY, rotZ);
 	XMMATRIX s = XMMatrixScaling(scaleX, scaleY, scaleZ);
 	XMMATRIX world = s*r*t;
 
@@ -36,7 +36,7 @@ const unsigned TransformManager::CreateTransform(const int gameObject, float pos
 	_transformCache.push_back(tc);
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
 	const_cast<GameObject&>(go).components[Components::TRANSFORM] = _transformCache.size() - 1;
-
+	//_UpdateCache(_transformCache.size() - 1);
 	return _transformCache.size() - 1;
 }
 
@@ -108,9 +108,9 @@ DirectX::XMFLOAT3 TransformManager::GetPosition(unsigned id) const
 
 void TransformManager::_Rotate(unsigned id, float degX, float degY, float degZ)
 {
-	float radX = degX * 180.0f / XM_PI;
-	float radY = degY * 180.0f / XM_PI;
-	float radZ = degZ * 180.0f / XM_PI;
+	float radX = degX * XM_PI / 180.0f;
+	float radY = degY * XM_PI / 180.0f;
+	float radZ = degZ * XM_PI /180.0f;
 	_transforms[id].rotation.x = _transforms[id].rotation.x + radX;
 	_transforms[id].rotation.y = _transforms[id].rotation.y + radY;
 	_transforms[id].rotation.z = _transforms[id].rotation.z + radZ;

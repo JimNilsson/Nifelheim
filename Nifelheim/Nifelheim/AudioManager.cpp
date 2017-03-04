@@ -14,8 +14,8 @@ AudioManager::AudioManager()
 	_audioHandles.reserve(100);
 	if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
 		throw std::runtime_error("COuld not initialize sdl audio");
-	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1)
-		throw std::runtime_error("Could not initilaize SDL_mixer");
+	//if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1)
+	//	throw std::runtime_error("Could not initilaize SDL_mixer");
 
 	error = Pa_Initialize();
 	if (error != paNoError)
@@ -32,10 +32,15 @@ AudioManager::AudioManager()
 
 AudioManager::~AudioManager()
 {
+	for (auto& i : _paStreams)
+		Pa_StopStream(i);
+	Pa_Sleep(1000);
 	Pa_Terminate();
-	for (auto& i : _chunksToDelete)
-		Mix_FreeChunk(i);
-	Mix_CloseAudio();
+	//for (auto& i : _chunksToDelete)
+	//	Mix_FreeChunk(i);
+	//Mix_CloseAudio();
+	for (auto& i : _audioData)
+		delete[] i.second.data;
 }
 
 void AudioManager::GiveAudio(int gameObject, const std::string & filename, int32_t flags)
@@ -44,16 +49,6 @@ void AudioManager::GiveAudio(int gameObject, const std::string & filename, int32
 	auto exists = _audioData.find(filename);
 	if (exists == _audioData.end())
 	{
-		//Mix_Chunk* audio = Mix_LoadWAV(filename.c_str());
-		//AudioData ad;
-		//ad.channels = 2;
-		//ad.data = (int16_t*)audio->abuf;
-		//ad.sampleCount = audio->alen;
-		//ad.sampleRate = 44100;
-		//_chunksToDelete.push_back(audio);
-		//_audioData[filename] = ad;
-		//audioData = &_audioData[filename];
-
 		SNDFILE* sf = nullptr;
 		SF_INFO info = {};
 		sf = sf_open(filename.c_str(), SFM_READ, &info);
@@ -102,7 +97,8 @@ void AudioManager::Play(int gameObject)
 {
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
 	_audioHandles[go.components[Components::AUDIO]].offset = 0;
-	_currentlyPlaying.insert(go.components[Components::AUDIO]);
+	//_currentlyPlaying.insert(go.components[Components::AUDIO]);
+	Pa_StopStream(_objectToStream[gameObject]);
 	Pa_StartStream(_objectToStream[gameObject]);
 }
 
@@ -110,15 +106,15 @@ void AudioManager::Stop(int gameObject)
 {
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
 	_audioHandles[go.components[Components::AUDIO]].offset = 0;
-	_currentlyPlaying.erase(go.components[Components::AUDIO]);
+	//_currentlyPlaying.erase(go.components[Components::AUDIO]);
 	Pa_StopStream(_objectToStream[gameObject]);
 }
 
 void AudioManager::Pause(int gameObject)
 {
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
-	auto g = _currentlyPlaying.find(go.components[Components::AUDIO]);
-	_currentlyPlaying.erase(go.components[Components::AUDIO]);
+//	auto g = _currentlyPlaying.find(go.components[Components::AUDIO]);
+//	_currentlyPlaying.erase(go.components[Components::AUDIO]);
 }
 
 void AudioManager::SetFlags(int gameObject, AudioSourceFlags flags)
