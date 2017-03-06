@@ -19,7 +19,7 @@
 
 typedef void AudioFilter(const void * source, void* output, unsigned long frameCount);
 
-void Filter(const void* source, void* output, unsigned long frameCount);
+void EchoFilter(const void* source, void* output, unsigned long frameCount);
 
 enum AudioSourceFlags : int32_t
 {
@@ -77,6 +77,7 @@ private:
 		uint8_t volume = 128;
 		float range = 150.0f;
 		int gameObject;
+		bool shouldClear = 0;
 		std::vector<AudioFilter*> audioFilters;
 	};
 	std::vector<AudioFilter*> _globalFilters;

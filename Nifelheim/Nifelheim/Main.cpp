@@ -82,16 +82,9 @@ int main(int argc, char** argv)
 	int cave = core->CreateGameObject();
 	core->GetMeshManager()->LoadMesh(cave, "cave.obj");
 	core->GetTextureManager()->GiveTexture(cave, "concrete_c.png", TextureTypes::TT_DIFFUSE);
-	core->GetTransformManager()->CreateTransform(cave, -15, 6, -5, 4, 4, 4,0,100,0);
+	core->GetTransformManager()->CreateTransform(cave, -15, 6, -5, 8, 8, 8,0,100,0);
 
-	int dadada = core->CreateGameObject();
-	core->GetAudioManager()->GiveAudio(dadada, "ooga.wav", AUDIO_ENABLE_MAX_RANGE | AUDIO_ENABLE_STEREO_PANNING);
-	core->GetAudioManager()->SetVolume(dadada, 255);
-	core->GetAudioManager()->SetRange(dadada, 400);
-	core->GetMeshManager()->LoadMesh(dadada, "cube.obj");
-	core->GetTextureManager()->GiveTexture(dadada, "neanderthal.png", TextureTypes::TT_DIFFUSE);
-	core->GetTransformManager()->CreateTransform(dadada, 0, 0, 0);
-	core->GetAudioManager()->Play(dadada);
+
 
 	int thingamajig = core->CreateGameObject();
 	core->GetAudioManager()->GiveAudio(thingamajig, "siren.wav", AUDIO_ENABLE_LOOPING | AUDIO_ENABLE_MAX_RANGE | AUDIO_ENABLE_STEREO_PANNING);
@@ -99,8 +92,18 @@ int main(int argc, char** argv)
 	core->GetAudioManager()->SetRange(thingamajig, 400);
 	core->GetMeshManager()->LoadMesh(thingamajig, "speakers.obj");
 	core->GetTextureManager()->GiveTexture(thingamajig, "speaker.png", TextureTypes::TT_DIFFUSE);
-	core->GetTransformManager()->CreateTransform(thingamajig, 20, 5, 0,0.01f,0.01f,0.01f);
+	core->GetTransformManager()->CreateTransform(thingamajig, 40, 5, 0,0.01f,0.01f,0.01f);
 	core->GetAudioManager()->Play(thingamajig);
+
+	int dadada = core->CreateGameObject();
+	core->GetAudioManager()->GiveAudio(dadada, "guitar.wav", AUDIO_ENABLE_LOOPING | AUDIO_ENABLE_MAX_RANGE | AUDIO_ENABLE_STEREO_PANNING);
+	core->GetAudioManager()->SetVolume(dadada, 127);
+	core->GetAudioManager()->SetRange(dadada, 400);
+	core->GetMeshManager()->LoadMesh(dadada, "cube.obj");
+	core->GetTextureManager()->GiveTexture(dadada, "volume.png", TextureTypes::TT_DIFFUSE);
+	core->GetTransformManager()->CreateTransform(dadada, -15,6,-5);
+	core->GetAudioManager()->Play(dadada);
+
 	InputManager* i = core->GetInputManager();
 	CameraManager* c = core->GetCameraManager();
 	AudioManager* audio = core->GetAudioManager();
@@ -131,10 +134,15 @@ int main(int argc, char** argv)
 		if (i->IsKeyDown(KEY_LCTRL))
 			c->MoveUp(deltatime*-4.0f);
 
+		if (i->WasKeyPressed(KEY_V))
+			audio->SetFilter(dadada, EchoFilter);
+		if (i->WasKeyPressed(KEY_B))
+			audio->ClearFilters(dadada);
+
 		if (i->WasKeyPressed(KEY_F))
-			audio->SetFilter(soundEmitter, Filter);
+			audio->SetFilter(thingamajig, EchoFilter);
 		if (i->WasKeyPressed(KEY_G))
-			audio->ClearFilters(soundEmitter);
+			audio->ClearFilters(thingamajig);
 
 		if (i->WasKeyPressed(KEY_K))
 		{

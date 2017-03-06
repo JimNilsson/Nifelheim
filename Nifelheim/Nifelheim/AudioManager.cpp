@@ -4,6 +4,8 @@
 #include <SDL_audio.h>
 #include <SDL_mixer.h>
 
+#define MIX_BUFFER_SIZE 44100
+
 #undef max
 #undef min
 #include <algorithm>
@@ -97,7 +99,6 @@ void AudioManager::Play(int gameObject)
 {
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
 	_audioHandles[go.components[Components::AUDIO]].offset = 0;
-	//_currentlyPlaying.insert(go.components[Components::AUDIO]);
 	Pa_StopStream(_objectToStream[gameObject]);
 	Pa_StartStream(_objectToStream[gameObject]);
 }
@@ -106,7 +107,6 @@ void AudioManager::Stop(int gameObject)
 {
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
 	_audioHandles[go.components[Components::AUDIO]].offset = 0;
-	//_currentlyPlaying.erase(go.components[Components::AUDIO]);
 	Pa_StopStream(_objectToStream[gameObject]);
 }
 
@@ -127,6 +127,7 @@ void AudioManager::SetVolume(int gameObject, uint8_t volume)
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
 	_audioHandles[go.components[Components::AUDIO]].volume = volume;
 }
+
 
 void AudioManager::SetRange(int gameObject, float range)
 {
@@ -252,14 +253,15 @@ void AudioManager::SetFilter(int gameObject, AudioFilter * filter)
 void AudioManager::ClearFilters(int gameObject)
 {
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObject);
-	_audioHandles[go.components[Components::AUDIO]].audioFilters.clear();
+	_audioHandles[go.components[Components::AUDIO]].shouldClear = true;
+	
 }
 
 int AudioManager::paCallback(const void * input, void * output, unsigned long frameCount, const PaStreamCallbackTimeInfo * timeInfo, PaStreamCallbackFlags statusFlags, void * userData)
 {
 	AudioHandle* handle = (AudioHandle*)userData;
-	int16_t outBuffer[4096];//Used for filters
-	int16_t inBuffer[4096];//Used for filters
+	int16_t outBuffer[MIX_BUFFER_SIZE];//Used for filters
+	int16_t inBuffer[MIX_BUFFER_SIZE];//Used for filters
 
 	//Sound volume and panning dependent on active camera
 	CameraManager* cam = Core::GetInstance()->GetCameraManager();
@@ -320,15 +322,26 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 
 	float distanceCorrectedVolume = (handle->volume / 128.0f) * scalingFactor;
 	int16_t* out = (int16_t*)output;
-	int upper = (int)std::min((long long)frameCount, handle->data->sampleCount*2 - handle->offset);
-	int16_t* curSound = (int16_t*)((uint8_t*)handle->data->data + handle->offset);
-	memcpy(inBuffer, curSound, sizeof(int16_t) * 4096);
+	int upper = (int)std::min((long long)frameCount, handle->data->sampleCount - handle->offset);
+	int16_t* curSound = (int16_t*)(handle->data->data + handle->offset);
+
+	uint32_t back = std::min(20000U, handle->offset);
+	uint32_t forwards = std::min(20000U, (uint32_t)handle->data->sampleCount - handle->offset);
+	int16_t* start = (int16_t*)(curSound - back);
+	uint32_t byteCount = (frameCount + back + forwards) * sizeof(int16_t);
+	memset(inBuffer, 0, sizeof(int16_t) * MIX_BUFFER_SIZE);
+	memcpy(&inBuffer[(MIX_BUFFER_SIZE / 2) - back], start, byteCount);
+	if (handle->shouldClear)
+	{
+		handle->audioFilters.clear();
+		handle->shouldClear = false;
+	}
 	for (auto& filter : handle->audioFilters)
 	{
 		filter(inBuffer, outBuffer, upper);
-		memcpy(inBuffer, outBuffer, sizeof(int16_t) * 4096);
+		memcpy(&inBuffer[MIX_BUFFER_SIZE / 2], outBuffer, frameCount * sizeof(int16_t));
 	}
-	curSound = inBuffer;
+	curSound = &inBuffer[MIX_BUFFER_SIZE / 2];
 	for (int i = 0; i < upper; i++)
 	{		
 		*out++ = distanceCorrectedVolume * rightScale * curSound[i];
@@ -344,7 +357,7 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 		}
 	}
 	uint32_t prev = handle->offset;
-	handle->offset = (handle->offset + frameCount*sizeof(int16_t)) % (handle->data->sampleCount*2);
+	handle->offset = (handle->offset + frameCount) % (handle->data->sampleCount);
 	/*if (handle->offset >= handle->data->sampleCount*2)
 		handle->offset = 0;*/
 
@@ -354,34 +367,16 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 	return 0;
 }
 
-void Filter(const void * source, void * output, unsigned long frameCount)
+void EchoFilter(const void * source, void * output, unsigned long frameCount)
 {
-	float taps[] = {
-		(1.0f / 10.0f),
-		(1.0f / 10.0f),
-		(1.0f / 10.0f),
-		(1.0f / 10.0f),
-		(1.0f / 10.0f),
-		(1.0f / 10.0f),
-		(1.0f / 10.0f),
-		(1.0f / 10.0f),
-		(1.0f / 10.0f),
-		(1.0f / 10.0f),
-
-	};
-
 	int16_t* in = (int16_t*)source;
+	int16_t* inStart = &in[MIX_BUFFER_SIZE / 2];
 	int16_t* out = (int16_t*)output;
 
 
 	for (int i = 0; i < frameCount; i++)
-	{
-		int k = i;
-		for (auto & tap : taps)
-		{
-			*out += in[k++] * tap;
-		}
-		*out++;
+	{	
+		*out++ = inStart[i - 18000] * 0.5f + inStart[i - 12000] * 0.7f + inStart[i - 6000] * 0.8f + inStart[i];
 	}
 	
 }
