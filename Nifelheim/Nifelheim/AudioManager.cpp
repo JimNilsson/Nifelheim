@@ -16,31 +16,24 @@ AudioManager::AudioManager()
 	_audioHandles.reserve(100);
 	if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
 		throw std::runtime_error("COuld not initialize sdl audio");
-	//if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1)
-	//	throw std::runtime_error("Could not initilaize SDL_mixer");
 
 	error = Pa_Initialize();
 	if (error != paNoError)
 	{
 		throw std::runtime_error("PortAudio broken");
-	}
-
-	//error = Pa_OpenDefaultStream(&paStream, 0, 2, paInt16, 44100.0, AUDIO_CHUNK_SIZE, paCallback, nullptr);
-	//if (error != paNoError)
-	//	throw std::runtime_error("Portaudio broken 2");
-
-	
+	}	
 }
 
 AudioManager::~AudioManager()
 {
+
 	for (auto& i : _paStreams)
+	{
 		Pa_StopStream(i);
+		Pa_CloseStream(i);
+	}
 	Pa_Sleep(1000);
 	Pa_Terminate();
-	//for (auto& i : _chunksToDelete)
-	//	Mix_FreeChunk(i);
-	//Mix_CloseAudio();
 	for (auto& i : _audioData)
 		delete[] i.second.data;
 }
@@ -135,114 +128,6 @@ void AudioManager::SetRange(int gameObject, float range)
 	_audioHandles[go.components[Components::AUDIO]].range = range;
 }
 
-void AudioManager::Update(float dt)
-{
-	////Play only a small chunk at a time, while one chunk is playing, load and process the next chunk
-	//if (_load)
-	//{
-	//	//Sound volume and panning dependent on active camera
-	//	CameraManager* cam = Core::GetInstance()->GetCameraManager();
-	//	DirectX::XMFLOAT3 pos = cam->GetPosition();
-	//	DirectX::XMFLOAT3 forward = cam->GetForward();
-	//	DirectX::XMFLOAT3 up = cam->GetUp();
-
-	//	DirectX::XMVECTOR playerPos = DirectX::XMLoadFloat3(&pos);
-
-	//	//Zero out the buffer since we will be adding to it rather than replacing it
-	//	memset(_audioLoadBuffer, 0, AUDIO_CHUNK_SIZE * sizeof(int16_t));
-
-	//	//Set of sounds that are still active after playing a small chunk.
-	//	std::set<uint32_t> swapWithCurrent;
-
-	//	for (auto& h : _currentlyPlaying)
-	//	{
-	//		float scalingFactor = 1.0f;
-	//		float leftScale = 1.0f;
-	//		float rightScale = 1.0f;
-	//		//Check if the sound source has a position
-	//		int gameObjectID = _audioToGameObject[h];
-	//		const GameObject& go = Core::GetInstance()->GetGameObject(gameObjectID);
-	//		if (_audioHandles[h].flags & AUDIO_ENABLE_MAX_RANGE && go.components[Components::TRANSFORM] >= 0)
-	//		{
-	//			TransformManager* tran = Core::GetInstance()->GetTransformManager();
-	//			DirectX::XMFLOAT3 soundOrigin = tran->GetPosition(go.components[Components::TRANSFORM]);
-	//			DirectX::XMVECTOR soundPos = DirectX::XMLoadFloat3(&soundOrigin);
-
-	//			DirectX::XMVECTOR soundToPlayer = DirectX::XMVectorSubtract(playerPos, soundPos);
-	//			float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(soundToPlayer));
-	//			scalingFactor = _audioHandles[h].range / (_audioHandles[h].range + 4.0f * DirectX::XM_PI * distance * distance);
-
-	//			DirectX::XMVECTOR xzPlane = DirectX::XMVectorSet(0, 1, 0, 0);
-	//			DirectX::XMVECTOR playerForward = DirectX::XMLoadFloat3(&forward);
-	//			DirectX::XMVECTOR playerToSound = DirectX::XMVectorScale(soundToPlayer, -1.0f);
-	//			//Project both into xz-plane to calculate angle between player direction and direction to sound
-
-	//			DirectX::XMVECTOR alongNormal = DirectX::XMVectorScale(xzPlane, DirectX::XMVectorGetX(DirectX::XMVector3Dot(xzPlane, playerForward)));
-	//			playerForward = DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(playerForward, alongNormal));
-
-	//			alongNormal = DirectX::XMVectorScale(xzPlane, DirectX::XMVectorGetX(DirectX::XMVector3Dot(xzPlane, playerToSound)));
-	//			playerToSound = DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(playerToSound, alongNormal));
-
-	//			float cosOfAngle = DirectX::XMVectorGetX(DirectX::XMVector3Dot(playerForward, playerToSound));
-
-	//			//If the cross product points "up", the sound is to the right
-	//			DirectX::XMVECTOR leftOrRight = DirectX::XMVector3Cross(playerForward, playerToSound);
-	//			if (DirectX::XMVectorGetY(leftOrRight) > 0)
-	//			{
-	//				rightScale = cosOfAngle;
-	//				leftScale = sqrt(1 - cosOfAngle * cosOfAngle);
-	//			}
-	//			else
-	//			{
-	//				leftScale = cosOfAngle;
-	//				rightScale = sqrt(1 - cosOfAngle * cosOfAngle);
-	//			}
-
-	//		}
-
-
-	//		int16_t* curSound = (int16_t*)((uint8_t*)_audioHandles[h].data->data + _audioHandles[h].offset);
-	//		
-	//		int upper = (int)std::min((long long)AUDIO_CHUNK_SIZE, _audioHandles[h].data->sampleCount - _audioHandles[h].offset);
-	//		for (int i = 0; i < upper; i++)
-	//		{
-	//			_audioLoadBuffer[i] += (_audioHandles[h].volume / 128.0f) * scalingFactor * curSound[i];
-	//		}
-	//		if (_audioHandles[h].flags & AUDIO_ENABLE_LOOPING)
-	//		{
-	//			curSound = (int16_t*)_audioHandles[h].data->data;
-	//			for (int i = upper, j = 0; i < AUDIO_CHUNK_SIZE; i++, j++)
-	//			{
-	//				_audioLoadBuffer[i] += (_audioHandles[h].volume / 128.0f) * scalingFactor * curSound[j];
-	//			}
-	//		}
-	//		_audioHandles[h].offset = (_audioHandles[h].offset + AUDIO_CHUNK_SIZE*sizeof(int16_t)) % _audioHandles[h].data->sampleCount;
-
-	//		if (_audioHandles[h].offset >= AUDIO_CHUNK_SIZE * sizeof(int16_t) || _audioHandles[h].flags & AUDIO_ENABLE_LOOPING)
-	//			swapWithCurrent.insert(h);
-	//	}
-	//	std::swap(_currentlyPlaying, swapWithCurrent);
-	//	
-
-	//	_load = false;
-	//}
-
-	//if (Mix_Playing(-1) == 0)
-	//{
-	//	_load = true;
-	//	std::swap(_audioPlayBuffer, _audioLoadBuffer);
-	//	Mix_Chunk chunk;
-	//	chunk.abuf = (Uint8*)_audioPlayBuffer;
-
-	//	chunk.alen = AUDIO_CHUNK_SIZE * sizeof(int16_t);
-	//	chunk.allocated = 0;
-	//	chunk.volume = 128;
-	//	
-	//	Mix_PlayChannel(-1, &chunk, 0);		
-	//}
-
-
-}
 
 void AudioManager::SetFilter(int gameObject, AudioFilter * filter)
 {
@@ -263,22 +148,27 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 	int16_t outBuffer[MIX_BUFFER_SIZE];//Used for filters
 	int16_t inBuffer[MIX_BUFFER_SIZE];//Used for filters
 
-	//Sound volume and panning dependent on active camera
-	CameraManager* cam = Core::GetInstance()->GetCameraManager();
-	DirectX::XMFLOAT3 pos = cam->GetPosition();
-	DirectX::XMFLOAT3 forward = cam->GetForward();
-	DirectX::XMFLOAT3 up = cam->GetUp();
 
-	DirectX::XMVECTOR playerPos = DirectX::XMLoadFloat3(&pos);
 
-	float scalingFactor = 1.0f;
-	float leftScale = 1.0f;
-	float rightScale = 1.0f;
-	//Check if the sound source has a position
+	float scalingFactor = 1.0f; //Will be changed by the volume setting
+	float leftScale = 1.0f; //Depends on if there is stereo panning
+	float rightScale = 1.0f; //Likewise
+
+	//A precondition for having a range falloff and stereo panning is that
+	//the sound has an origin, for that the gameobject emitting the sound
+	//needs to have a transform component
 	int gameObjectID = handle->gameObject;
 	const GameObject& go = Core::GetInstance()->GetGameObject(gameObjectID);
 	if (go.components[Components::TRANSFORM] >= 0)
 	{
+		//Sound volume and panning dependent on active camera
+		CameraManager* cam = Core::GetInstance()->GetCameraManager();
+		DirectX::XMFLOAT3 pos = cam->GetPosition();
+		DirectX::XMFLOAT3 forward = cam->GetForward();
+		DirectX::XMFLOAT3 up = cam->GetUp();
+
+		DirectX::XMVECTOR playerPos = DirectX::XMLoadFloat3(&pos);
+
 		TransformManager* tran = Core::GetInstance()->GetTransformManager();
 		DirectX::XMFLOAT3 soundOrigin = tran->GetPosition(go.components[Components::TRANSFORM]);
 		DirectX::XMVECTOR soundPos = DirectX::XMLoadFloat3(&soundOrigin);
@@ -310,9 +200,9 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 			rightScale = (sqrt(2) / 2.0f)*(cosOfAngle - std::sin(angle));
 			leftScale = (sqrt(2) / 2.0f)*(cosOfAngle + std::sin(angle));
 
-			//If the cross product points "down", the sound is to the left
+			//If the cross product points "down", the sound is to the left. (Unless the angle was greater than 90 degrees)
 			DirectX::XMVECTOR leftOrRight = DirectX::XMVector3Cross(playerForward, playerToSound);
-			if (DirectX::XMVectorGetY(leftOrRight) < 0)
+			if (DirectX::XMVectorGetY(leftOrRight) < 0 && cosOfAngle > 0)
 			{
 				std::swap(rightScale, leftScale);
 			}
@@ -325,8 +215,8 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 	int upper = (int)std::min((long long)frameCount, handle->data->sampleCount - handle->offset);
 	int16_t* curSound = (int16_t*)(handle->data->data + handle->offset);
 
-	uint32_t back = std::min(20000U, handle->offset);
-	uint32_t forwards = std::min(20000U, (uint32_t)handle->data->sampleCount - handle->offset);
+	uint32_t back = std::min((uint32_t)(MIX_BUFFER_SIZE / 2), handle->offset);
+	uint32_t forwards = std::min((uint32_t)((MIX_BUFFER_SIZE / 2) - frameCount), (uint32_t)handle->data->sampleCount - handle->offset);
 	int16_t* start = (int16_t*)(curSound - back);
 	uint32_t byteCount = (frameCount + back + forwards) * sizeof(int16_t);
 	memset(inBuffer, 0, sizeof(int16_t) * MIX_BUFFER_SIZE);
@@ -358,8 +248,6 @@ int AudioManager::paCallback(const void * input, void * output, unsigned long fr
 	}
 	uint32_t prev = handle->offset;
 	handle->offset = (handle->offset + frameCount) % (handle->data->sampleCount);
-	/*if (handle->offset >= handle->data->sampleCount*2)
-		handle->offset = 0;*/
 
 	if (prev >= handle->offset && !(handle->flags & AUDIO_ENABLE_LOOPING))
 		return 1;
@@ -375,7 +263,12 @@ void EchoFilter(const void * source, void * output, unsigned long frameCount)
 
 
 	for (int i = 0; i < frameCount; i++)
-	{	
+	{
+		//Simple echo effect by taking samples that were "heard" roughly 400, 280 and 140 milliseconds ago
+		//with different weights on them. The recent sounds have more contribution as they are expected
+		//to have lost less energy by bouncing around inside the "echo chamber" whereas the
+		//least recent sample has the least energy since that sound has been "bouncing" around
+		//longer
 		*out++ = inStart[i - 18000] * 0.5f + inStart[i - 12000] * 0.7f + inStart[i - 6000] * 0.8f + inStart[i];
 	}
 	

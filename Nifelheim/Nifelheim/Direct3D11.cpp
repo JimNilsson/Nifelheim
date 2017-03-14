@@ -23,7 +23,7 @@ Direct3D11::Direct3D11()
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scd.OutputWindow = core->GetWindow()->GetHandle();
 	scd.SampleDesc.Count = 1; 
-	scd.Windowed = TRUE; 
+	scd.Windowed = FALSE; 
 	
 	HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG, NULL, NULL, D3D11_SDK_VERSION, &scd, &_swapChain, &_device, NULL, &_deviceContext);
 	if (FAILED(hr))

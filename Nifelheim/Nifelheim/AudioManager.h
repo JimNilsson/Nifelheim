@@ -15,7 +15,6 @@
 #include <sndfile.h>
 #include <portaudio.h>
 
-#include <SDL_mixer.h>
 
 typedef void AudioFilter(const void * source, void* output, unsigned long frameCount);
 
@@ -41,7 +40,7 @@ public:
 	void SetFlags(int gameObject, AudioSourceFlags flags);
 	void SetVolume(int gameObject, uint8_t volume);
 	void SetRange(int gameObject, float range);
-	void Update(float dt);
+
 	void SetFilter(int gameObject, AudioFilter* filter);
 	void ClearFilters(int gameObject);
 
@@ -85,13 +84,6 @@ private:
 	std::unordered_map<std::string, AudioData> _audioData;
 	std::unordered_map<uint32_t, int32_t> _audioToGameObject;
 	std::vector<AudioHandle> _audioHandles;
-//	std::set<uint32_t> _currentlyPlaying;
-//	std::vector<Mix_Chunk*> _chunksToDelete;
-
-	int16_t _audioPlayBuffer[AUDIO_CHUNK_SIZE] = {};
-	int16_t _audioLoadBuffer[AUDIO_CHUNK_SIZE] = {};
-
-	bool _load = true;
 
 
 };

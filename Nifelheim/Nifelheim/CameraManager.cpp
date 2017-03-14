@@ -11,7 +11,7 @@ CameraManager::CameraManager()
 	float width = (float)core->GetWindow()->GetWidth();
 	float height = (float)core->GetWindow()->GetHeight();
 	float aspectRatio = width / height;
-	float fov = 85.0f * 180.0f / XM_PI;
+	float fov = XM_PI / 2.0f;
 	Camera defaultCam;
 	defaultCam.aspectRatio = aspectRatio;
 	defaultCam.fov = fov;

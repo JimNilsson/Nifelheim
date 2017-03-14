@@ -78,7 +78,7 @@ void Core::ShutDown()
 
 void Core::Init(uint32_t width, uint32_t height, bool fullscreen)
 {
-	_window = new Window();
+	_window = new Window(width, height, fullscreen);
 	_d3d11 = new Direct3D11();
 	_meshManager = new MeshManager();
 	_cameraManager = new CameraManager();

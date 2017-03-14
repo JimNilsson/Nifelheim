@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
 	Core::CreateInstance();
 	Core* core = Core::GetInstance();
-	core->Init(800, 600, false);
+	core->Init(1920, 1080, true);
 	srand(1232323);
 	//
 
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
 	int cave = core->CreateGameObject();
 	core->GetMeshManager()->LoadMesh(cave, "cave.obj");
 	core->GetTextureManager()->GiveTexture(cave, "concrete_c.png", TextureTypes::TT_DIFFUSE);
-	core->GetTransformManager()->CreateTransform(cave, -15, 6, -5, 8, 8, 8,0,100,0);
+	core->GetTransformManager()->CreateTransform(cave, -15, 6, -5, 10, 10, 10,0,100,0);
 
 
 
@@ -114,13 +114,13 @@ int main(int argc, char** argv)
 			audio->Play(dadada);
 		float deltatime = t->GetDeltaTime();
 		if (i->IsKeyDown(KEY_ARROW_LEFT))
-			c->RotateActiveCamera(0.0f, deltatime * -0.05f, 0.0f);
+			c->RotateActiveCamera(0.0f, deltatime * -0.018f, 0.0f);
 		if (i->IsKeyDown(KEY_ARROW_RIGHT))
-			c->RotateActiveCamera(0.0f, deltatime * 0.05f, 0.0f);
+			c->RotateActiveCamera(0.0f, deltatime * 0.018f, 0.0f);
 		if (i->IsKeyDown(KEY_ARROW_UP))
-			c->RotatePitch(deltatime * -0.05f);
+			c->RotatePitch(deltatime * -0.018f);
 		if (i->IsKeyDown(KEY_ARROW_DOWN))
-			c->RotatePitch(deltatime * 0.05f);
+			c->RotatePitch(deltatime * 0.018f);
 		if (i->IsKeyDown(KEY_W))
 			c->MoveForward(deltatime * 4.0f);
 		if (i->IsKeyDown(KEY_S))
