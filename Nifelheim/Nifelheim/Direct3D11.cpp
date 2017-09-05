@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include "Direct3D11.h"
 #include "Core.h"
 #include "DebugLogger.h"
@@ -22,7 +23,7 @@ Direct3D11::Direct3D11()
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scd.OutputWindow = core->GetWindow()->GetHandle();
 	scd.SampleDesc.Count = 1; 
-	scd.Windowed = TRUE; 
+	scd.Windowed = FALSE; 
 	
 	HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG, NULL, NULL, D3D11_SDK_VERSION, &scd, &_swapChain, &_device, NULL, &_deviceContext);
 	if (FAILED(hr))
@@ -80,6 +81,9 @@ Direct3D11::Direct3D11()
 	_CreateViewPort();
 	_CreateRasterizerState();
 	_CreateConstantBuffers();
+	_CreateDepthStencilState();
+
+	fuckballer = CreateTexture(L"Skybox2.dds");
 }
 
 Direct3D11::~Direct3D11()
@@ -138,6 +142,10 @@ Direct3D11::~Direct3D11()
 		SAFE_RELEASE(i);
 	}
 	for (auto &i : _textures)
+	{
+		SAFE_RELEASE(i);
+	}
+	for (auto &i : _depthStencilStates)
 	{
 		SAFE_RELEASE(i);
 	}
@@ -225,12 +233,14 @@ int Direct3D11::CreateTexture(const wchar_t * filename)
 	}
 	else if (ws.substr(ws.size() - 4) == L".png")
 	{
-		HRESULT hr = CreateWICTextureFromFile(_device, filename, nullptr, &srv);
+		//HRESULT hr = CreateWICTextureFromFile(_device, filename, nullptr, &srv);
+		HRESULT hr = CreateWICTextureFromFileEx(_device, filename, 0U, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS, false, nullptr, &srv);
 		if (FAILED(hr))
 		{
 			DebugLogger::AddMsg("Failed to create texture from file. (fuck wchar)");
 			return -1;
 		}
+		
 	}
 	else
 	{
@@ -239,6 +249,39 @@ int Direct3D11::CreateTexture(const wchar_t * filename)
 	}
 	_textures.push_back(srv);
 	return _textures.size() - 1;
+}
+
+int Direct3D11::CreateTextureCube(const wchar_t * filename)
+{
+	//ID3D11Texture3D* t3d = nullptr;
+	//D3D11_TEXTURE3D_DESC td;
+	//td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	//td.CPUAccessFlags = 0;
+	//td.Depth = 1024;
+	//td.Height = 1024;
+	//td.Width = 1024;
+	//td.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	//
+	//
+
+	//ID3D11ShaderResourceView* srv = nullptr;
+	//std::wstring ws(filename);
+	//if (ws.substr(ws.size() - 4) == L".dds")
+	//{
+	//	HRESULT hr = CreateDDSTextureFromFile(_device, filename, nullptr, &srv);
+	//	if (FAILED(hr))
+	//	{
+	//		DebugLogger::AddMsg("Failed to create texture from file. (fuck wchar)");
+	//		return -1;
+	//	}
+	//}
+	//else
+	//{
+	//	DebugLogger::AddMsg("Unknown fileformat for texturecube");
+	//	return -1;
+	//}
+
+	return 0;
 }
 
 void Direct3D11::Draw()
@@ -313,6 +356,7 @@ void Direct3D11::Draw()
 				_deviceContext->PSSetShaderResources(0, 1, &_textures[b.job.textures.textures[TextureTypes::TT_DIFFUSE]]);
 			if (b.job.textures.textures[TextureTypes::TT_NORMAL] >= 0)
 				_deviceContext->PSSetShaderResources(1, 1, &_textures[b.job.textures.textures[TextureTypes::TT_NORMAL]]);
+
 			if(b.job.mesh.indexBuffer < 0)
 			{
 				_deviceContext->DrawInstanced(b.job.mesh.vertexCount, b.jobCount, 0, 0);
@@ -320,38 +364,55 @@ void Direct3D11::Draw()
 			else
 			{
 				_deviceContext->IASetIndexBuffer(_indexBuffers[b.job.mesh.indexBuffer], DXGI_FORMAT_R32_UINT, 0);
-				//_deviceContext->GSSetShader(_geometryShaders[GeometryShaders::GS_SCALE_UV], nullptr, 0);
 				_deviceContext->DrawIndexedInstanced(b.job.mesh.indexCount, b.jobCount, 0, 0, 0);
-				//_deviceContext->GSSetShader(nullptr, nullptr, 0);
 			}
 		}
-
-
 	}
-
 
 	for (auto &i : rbatch)
 	{
 		delete[] i.transforms;
 	}
 
+	//////////////////////
+	_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	_deviceContext->VSSetShader(_vertexShaders[VertexShaders::VS_SKYBOX], nullptr, 0);
+	_deviceContext->PSSetShader(_pixelShaders[PixelShaders::PS_SKYBOX], nullptr, 0);
+	_deviceContext->PSSetShaderResources(0, 1, &_textures[fuckballer]);
+
+	SkyBuffer sb;
+	DirectX::XMFLOAT3 campos = core->GetCameraManager()->GetPosition();
+	sb.Campos = DirectX::XMFLOAT4(campos.x, campos.y, campos.z, 1.0f);
+	XMStoreFloat4x4(&sb.ViewProj, XMMatrixTranspose(view * proj));
+
+	_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_SKYBOX], 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubres);
+	memcpy(mappedSubres.pData, &sb, sizeof(sb));
+	_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_SKYBOX], 0);
+
+	_deviceContext->VSSetConstantBuffers(0, 1, &_constantBuffers[ConstantBuffers::CB_SKYBOX]);
+	_deviceContext->OMSetDepthStencilState(_depthStencilStates[DSStates::DS_LESS_EQUAL], 1);
+	_deviceContext->Draw(14, 0);
+	_deviceContext->OMSetDepthStencilState(nullptr, 0);
+	//////////////////////
+
 	
 	const std::vector<PointLight>& pointLights = core->GetLightManager()->GetPointLights();
+	const std::vector<DirectionalLight>& dirLights = core->GetLightManager()->GetDirLights();
+	
 	LightBuffer lb;
-
-	lb.pointLightCount = pointLights.size();
-	if (lb.pointLightCount > MAX_POINTLIGHTS)
-		lb.pointLightCount = MAX_POINTLIGHTS;
-
+	lb.pointLightCount = std::min((uint32_t)pointLights.size(), MAX_POINTLIGHTS);
+	lb.dirLightCount = std::min((uint32_t)dirLights.size(), MAX_DIRLIGHTS);
 	if(lb.pointLightCount > 0)
 		memcpy(&lb.pointLights[0], &pointLights[0], sizeof(PointLight) * lb.pointLightCount);
+	if (lb.dirLightCount > 0)
+		memcpy(&lb.dirLights[0], &dirLights[0], lb.dirLightCount * sizeof(DirectionalLight));
 
 	_deviceContext->Map(_constantBuffers[ConstantBuffers::CB_LIGHTBUFFER], 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubres);
 	memcpy(mappedSubres.pData, &lb, sizeof(lb));
 	_deviceContext->Unmap(_constantBuffers[ConstantBuffers::CB_LIGHTBUFFER], 0);
 	_deviceContext->PSSetConstantBuffers(0, 1, &_constantBuffers[ConstantBuffers::CB_LIGHTBUFFER]);
 
-
+	int k = sizeof(LightBuffer);
 	_deviceContext->IASetInputLayout(nullptr);
 	_deviceContext->VSSetShader(_vertexShaders[VertexShaders::VS_FULLSCREEN], nullptr, 0);
 	_deviceContext->PSSetShader(_pixelShaders[PixelShaders::PS_FINAL], nullptr, 0);
@@ -360,6 +421,7 @@ void Direct3D11::Draw()
 	_deviceContext->OMSetRenderTargets(RenderTargets::RT_COUNT + 1, nullRTVs, nullptr);
 	_deviceContext->PSSetShaderResources(0, RenderTargets::RT_COUNT, &_shaderResourceViews[0]);
 	_deviceContext->PSSetShaderResources(RenderTargets::RT_COUNT, 1, &_depth.SRV);
+	_deviceContext->PSSetShaderResources(3, 1, &_textures[fuckballer]);
 
 	_deviceContext->PSSetConstantBuffers(1, 1, &_constantBuffers[ConstantBuffers::CB_PER_FRAME]);
 
@@ -410,6 +472,17 @@ void Direct3D11::_CreateShadersAndInputLayouts()
 	_device->CreateGeometryShader(pVS->GetBufferPointer(), pVS->GetBufferSize(), nullptr, &_geometryShaders[GeometryShaders::GS_SCALE_UV]);
 	SAFE_RELEASE(pVS);
 
+	hr = D3DCompileFromFile(L"SkyboxVS.hlsl", nullptr, nullptr, "main", "vs_5_0",
+		NULL, NULL, &pVS, nullptr);
+	_device->CreateVertexShader(pVS->GetBufferPointer(), pVS->GetBufferSize(), nullptr, &_vertexShaders[VertexShaders::VS_SKYBOX]);
+	SAFE_RELEASE(pVS);
+
+	hr = D3DCompileFromFile(L"SkyboxPS.hlsl", nullptr, nullptr, "main", "ps_4_0",
+		NULL, NULL, &pVS, nullptr);
+	_device->CreatePixelShader(pVS->GetBufferPointer(), pVS->GetBufferSize(), nullptr, &_pixelShaders[PixelShaders::PS_SKYBOX]);
+	SAFE_RELEASE(pVS);
+
+
 }
 
 void Direct3D11::_CreateDepthBuffer()
@@ -452,6 +525,29 @@ void Direct3D11::_CreateDepthBuffer()
 
 }
 
+void Direct3D11::_CreateDepthStencilState()
+{
+	D3D11_DEPTH_STENCIL_DESC dsd;
+	dsd.DepthEnable = true;
+	dsd.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsd.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	dsd.StencilEnable = true;
+	dsd.StencilReadMask = 0xFF;
+	dsd.StencilWriteMask = 0xFF;
+
+	dsd.FrontFace.StencilFailOp = D3D11_STENCIL_OP_ZERO;
+	dsd.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	dsd.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsd.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	dsd.BackFace.StencilFailOp = D3D11_STENCIL_OP_ZERO;
+	dsd.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	dsd.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsd.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	HRESULT hr = _device->CreateDepthStencilState(&dsd, &_depthStencilStates[DSStates::DS_LESS_EQUAL]);
+}
+
 void Direct3D11::_CreateSamplerState()
 {
 	D3D11_SAMPLER_DESC sd;
@@ -467,6 +563,18 @@ void Direct3D11::_CreateSamplerState()
 	sd.MipLODBias = 0.0f;
 	_device->CreateSamplerState(&sd, &_samplerStates[Samplers::ANISO]);
 	_deviceContext->PSSetSamplers(0, 1, &_samplerStates[Samplers::ANISO]);
+
+	//ZeroMemory(&sd, sizeof(sd));
+	//sd.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
+	//sd.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
+	//sd.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
+	//sd.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	//sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	//sd.MaxAnisotropy = 0;
+	//sd.MaxLOD = FLT_MAX;
+	//sd.MinLOD = -FLT_MAX;
+	//sd.MipLODBias = 0.0f;
+	
 }
 
 void Direct3D11::_CreateViewPort()
@@ -530,5 +638,8 @@ void Direct3D11::_CreateConstantBuffers()
 
 	bd.ByteWidth = sizeof(LightBuffer);
 	hr = _device->CreateBuffer(&bd, nullptr, &_constantBuffers[ConstantBuffers::CB_LIGHTBUFFER]);
+
+	bd.ByteWidth = sizeof(SkyBuffer);
+	hr = _device->CreateBuffer(&bd, nullptr, &_constantBuffers[ConstantBuffers::CB_SKYBOX]);
 
 }

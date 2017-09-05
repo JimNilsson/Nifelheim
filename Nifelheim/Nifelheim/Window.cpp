@@ -8,8 +8,8 @@ Window::Window(uint32_t width, uint32_t height, bool fullscreen)
 	//Set up window and rendering context
 	_window = nullptr;
 	_surface = nullptr;
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		throw std::exception("Could not initialize SDL");
+	if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
+		throw std::exception("Could not initialize SDL Video");
 	_window = SDL_CreateWindow("Nifelheim", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
 	if (_window == nullptr)
 		throw std::exception("Failed to create window");
@@ -21,7 +21,7 @@ Window::Window(uint32_t width, uint32_t height, bool fullscreen)
 
 Window::~Window()
 {
-	SDL_Quit();
+	
 }
 
 uint32_t Window::GetWidth()

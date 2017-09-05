@@ -69,6 +69,9 @@
     <ClCompile Include="TerrainQuadTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Direct3D11.h">
@@ -134,12 +137,21 @@
     <ClInclude Include="TerrainQuadTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AudioManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="StaticMeshVS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="ScaleUVGS.hlsl">
+      <Filter>Source Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="AreaLightExtruderGS.hlsl">
+      <Filter>Source Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="AreaLightPS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </FxCompile>
   </ItemGroup>
@@ -151,6 +163,12 @@
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="StaticMeshPS.hlsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="SkyboxVS.hlsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="SkyboxPS.hlsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="FinalPS.hlsl">

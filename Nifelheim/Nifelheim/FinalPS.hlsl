@@ -6,6 +6,14 @@ struct PointLight
 	float intensity;
 };
 
+struct DirLight
+{
+	float3 direction;
+	float intensity;
+	float3 color;
+	float pad;
+};
+
 struct VS_OUT
 {
 	float4 pos : SV_POSITION;
@@ -14,8 +22,12 @@ struct VS_OUT
 
 cbuffer LightBuffer : register(b0)
 {
-	PointLight pointLights[512];
+	PointLight pointLights[64];
+	DirLight dirLights[8];
 	uint pointLightCount;
+	uint dirLightCount;
+	float pad;
+	float pad2;
 }
 
 cbuffer PerFrameBuffer : register(b1)
@@ -34,29 +46,41 @@ SamplerState AniSam : register(s0);
 Texture2D Diffuse : register(t0);
 Texture2D Normal : register(t1);
 Texture2D Depth : register(t2);
+TextureCube Sky : register(t3);
 
-float3 Fr_Schlick(float3 F0, float F90, float cosIncident)
+float fresnel(float f0, float3 n, float3 l)
 {
-	return F0 + (F90 - F0) * pow(1.0f - cosIncident, 5.0f);
+	return f0 + (1.0f - f0) * pow(1.0f - dot(n, l), 5.0f);
 }
-float Vis_SmithGGXHeightCorrelated(float NdL, float NdV, float alpha)
-{
 
-	float alphaSq = alpha * alpha;
-	float lambdaV = NdL * sqrt((-NdV * alphaSq + NdV) * NdV + alphaSq);
-	float lambdaL = NdV * sqrt((-NdL * alphaSq + NdL) * NdL + alphaSq);
-	return 0.5f / (lambdaV + lambdaL + 1e-5f);
-}
-float NDF_GGX(float NdH, float m)
+float distribution(float3 n, float3 h, float roughness)
 {
-	float mSq = m * m;
-	float x = (NdH * mSq - NdH) * NdH + 1.0f;
-	return mSq / (3.141592f * x * x + 1e-5f);
+	float msq = roughness * roughness;
+	float NdHsq = max(dot(n, h), 0.0f);
+	NdHsq = NdHsq * NdHsq;
+	return exp((NdHsq - 1.0f) / (msq * NdHsq)) / (3.14159265f * msq * NdHsq * NdHsq);
+}
+
+float geometry(float3 n, float3 h, float3 v, float3 l, float roughness)
+{
+	float NdH = dot(n, h);
+	float NdL = dot(n, l);
+	float NdV = dot(n, v);
+	float VdH = dot(v, h);
+	float cNdL = max(NdL, 0.0f);
+	float cNdV = max(NdV, 0.0f);
+	return min(min(2.0f * NdH * cNdV / VdH, 2.0f * NdH * cNdL / VdH), 1.0f);
+}
+
+float diffEnergy(float f0, float3 n, float3 l)
+{
+	return 1.0f - fresnel(f0, n, l);
 }
 
 float4 main(VS_OUT input) : SV_TARGET
 {
 	float depth = Depth.Sample(AniSam, input.tex).r;
+	
 	float x = input.tex.x * 2.0f - 1.0f;
 	float y = (1.0f - input.tex.y) * 2.0f - 1.0f;
 	float4 projPos = float4(x, y, depth, 1.0f);
@@ -65,16 +89,19 @@ float4 main(VS_OUT input) : SV_TARGET
 	posVS.xyz /= posVS.w;
 	//return posVS;
 	//return float4(posVS.z, posVS.z, posVS.z, 1.0f);
-	float3 normal = Normal.Sample(AniSam, input.tex).rgb;
-	//return float4(normal, 1.0f);
-	normal = normalize((normal * 2.0f) - 1.0f);
-//	normal.z *= -1.0f;
-	//normal = mul(float4(normal, 0.0f), gInvView);
-	//return float4(normal, 1.0f);
-	float3 diffuse = Diffuse.Sample(AniSam, input.tex).rgb;
+	float4 normalSam = Normal.Sample(AniSam, input.tex);
+	float3 normal = normalize((normalSam.xyz * 2.0f) - 1.0f);
+	float metallic = normalSam.w;
+	float4 diffuse = Diffuse.Sample(AniSam, input.tex);
+	float roughness = diffuse.a;
+	if (length(normalSam.xyz) < 0.1f)
+		return float4(diffuse.xyz, 1.0f);
+
+	
 	//return float4(diffuse, 1.0f);
 	float3 pos = posVS.xyz;
 	//float3 col = float3(0.0f, 0.0f, 0.0f);
+	float3 plContribution = float3(0.0f, 0.0f, 0.0f);;
 	float3 diff = float3(0.0f, 0.0f, 0.0f);
 	float3 spec = float3(0.0f, 0.0f, 0.0f);
 	for (uint i = 0; i < pointLightCount; ++i)
@@ -87,43 +114,42 @@ float4 main(VS_OUT input) : SV_TARGET
 		{
 			surfaceToLight /= distance;
 			float lightAmount = dot(normal, surfaceToLight);
-			//return float4(lightAmount, lightAmount, lightAmount, 1.0f);
 			if (lightAmount > 0.0f)
 			{
-			//	diffuse.rgb += lightAmount * pointLights[i].color / distance;
-				/*float3 v = normalize(-posVS.xyz);
-				float3 h = normalize(surfaceToLight + v);
-				float NdL = saturate(dot(normal, surfaceToLight));
-				float NdH = saturate(dot(normal, h));
-				float NdV = abs(dot(normal, v));
-				float LdH = saturate(dot(surfaceToLight, h));
-				float roughness = 0.5f;
-				float linRoughness = roughness * roughness;
-				float3 albedo = diffuse;
-
-				float F0 = lerp(0.04f, diffuse, 0.1f);
-				float3 F = Fr_Schlick(F0, 1.0f, LdH);
-				float Vis = Vis_SmithGGXHeightCorrelated(NdL, NdV, roughness);
-				float D = NDF_GGX(NdH, roughness);
-				float3 spec = F * Vis * D;
-
-				float A = 1.0f - 0.5f * linRoughness / (linRoughness + 0.57f);
-				float B = 0.45f * linRoughness / (linRoughness + 0.09f);
-				float LdV = saturate(dot(surfaceToLight, v));
-				col += pointLights[i].color * pointLights[i].intensity * saturate(1.0f-distance / pointLights[i].range) * (albedo / 3.141592f) * (A + B * saturate(LdV - NdV * NdL) / max(NdL, NdV));*/
+			
 				float attenuation = 1.0f / ((1.0f + distance * 0.7412f) + distance * distance * 0.05f);
-				diff += lightAmount * pointLights[i].color * attenuation * pointLights[i].intensity;
-				//float3 ref = normalize(2.0f * lightAmount * normal - surfaceToLight);
-				//float specf = pow(saturate(dot(ref, -posVS.xyz)), 2000.0f);
-				//spec += pointLights[i].color * specf * attenuation;
-
+				diff += lightAmount * pointLights[i].color * attenuation * pointLights[i].intensity * roughness;
 				float3 H = normalize(surfaceToLight - normalize(posVS.xyz));
 				float NdH = saturate(dot(normal, H));
-				spec += pointLights[i].color * pow(NdH, 12.0f) * pointLights[i].intensity * attenuation;
+				spec += pointLights[i].color * pow(NdH, 12.0f) * pointLights[i].intensity * attenuation * (1.0f - roughness);
 
 
 			}
 		}
+
 	}
+
+	//for (uint i = 0; i < dirLightCount; ++i)
+	//{
+	//	float lightAmount = dot(dirLights[i].direction, normal);
+	//	if (lightAmount > 0.0f)
+	//	{
+	//		diff += lightAmount * dirLights[i].color * dirLights[i].intensity * roughness;
+	//		float3 H = normalize(dirLights[i].direction - normalize(posVS.xyz));
+	//		float NdH = saturate(dot(normal, H));
+	//		spec += dirLights[i].color * pow(NdH, 12.0f) * pointLights[i].intensity * (1.0f - roughness);
+	//	}
+	//}
+
+
+	//float3 viewDir = normalize(posVS);
+	//float3 ref = viewDir + (2.0f * normal * dot(normal, -viewDir));
+	//ref = mul(float4(ref, 0.0f), gInvView).xyz;
+	//float3 refcol = Sky.Sample(AniSam, ref).xyz;
+	//float NdS = dot(normal, dir);
+	//if(NdS > 0.0f)
+	//	diffuse += NdS * refcol * 0.05f + NdS * diffuse * float3(1.0f,0.62f,0.0f) * 0.9f;
+	//diffuse += 0.05f * refcol;
+	//return saturate(float4(diffuse, 1.0f));
 	return float4(saturate(diffuse * diff + diffuse * spec + diffuse * 0.2f), 1.0f);
 }

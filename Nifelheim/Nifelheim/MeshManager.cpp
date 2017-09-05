@@ -227,7 +227,7 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 		return -1;
 	}
 
-	size_t filesize = fin.tellg();
+	size_t filesize = static_cast<size_t>(fin.tellg());
 	size_t datapoints = filesize / byteperpixel;
 	fin.seekg(std::ios_base::beg);
 
@@ -243,7 +243,7 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 	fin.read((char*)&rawData[0], filesize);
 	fin.close();
 	float* heightmap = new float[datapoints];
-	for (int i = 0; i < datapoints; ++i)
+	for (unsigned i = 0; i < datapoints; ++i)
 	{
 		
 		unsigned height = 0;
@@ -256,7 +256,7 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 	Vertex* vertices = new Vertex[datapoints];
 	float halfWidth = 0.5f * static_cast<float>(n);
 	float dd = static_cast<float>(n) / static_cast<float>(n - 1);
-	float duv = 1.0f / static_cast<float>(n - 1);
+	float duv = 0.10f / static_cast<float>(n - 1);
 	for (unsigned i = 0; i < datapoints; ++i)
 	{
 		float x = -halfWidth + (i % n)*dd;
@@ -283,7 +283,7 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 		}
 	}
 
-	for (int i = 0; i < (n - 1)*(n - 1) * 6; i += 3)
+	for (unsigned i = 0; i < (n - 1)*(n - 1) * 6; i += 3)
 	{
 		XMVECTOR v0 = XMLoadFloat3(&vertices[indices[i]].position);
 		XMVECTOR v1 = XMLoadFloat3(&vertices[indices[i + 1]].position);
@@ -297,11 +297,9 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 		XMStoreFloat3(&vertices[indices[i + 1]].normal, normal + XMLoadFloat3(&vertices[indices[i + 1]].normal));
 		XMStoreFloat3(&vertices[indices[i + 2]].normal, normal + XMLoadFloat3(&vertices[indices[i + 2]].normal));
 
-		//vertices[indices[i + 1]].texcoord.y *= XMVectorGetX(XMVector3Length(e0));
-		//vertices[indices[i + 2]].texcoord.y *= XMVectorGetX(XMVector3Length(e1));
 	}
 
-	for (int i = 0; i < datapoints; ++i)
+	for (unsigned i = 0; i < datapoints; ++i)
 	{
 		XMStoreFloat3(&vertices[i].normal, XMVector3Normalize(XMLoadFloat3(&vertices[i].normal)));
 		XMVECTOR v = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
@@ -309,37 +307,37 @@ int MeshManager::LoadTerrain(const int gameObject, const std::string & filename,
 		tan = XMVectorSetW(tan, -1.0f);
 		XMStoreFloat4(&vertices[i].tangent, tan);
 
-		if ((i + 1) % n > i && i + 1 < datapoints)
-		{
-			XMVECTOR p1 = XMLoadFloat3(&vertices[i].position);
-			XMVECTOR p2 = XMLoadFloat3(&vertices[i + 1].position);
-			float distance = XMVectorGetX(XMVector3Length(p1 - p2));
-			vertices[i + 1].texcoord.x = vertices[i].position.x + (n / 2.0f) + distance;
-			//if (distance > 1.1f)
-			//{
-			//	for (int j = 0; j < n - ((i + 1) % n); ++j)
-			//	{
-			//		vertices[j + i + 1].texcoord.x += distance - 1.0f;
-			//	}
-			//}
-		}
-		if (i + n < datapoints)
-		{
-			XMVECTOR p1 = XMLoadFloat3(&vertices[i].position);
-			XMVECTOR p2 = XMLoadFloat3(&vertices[i + n].position);
-			float distance = XMVectorGetX(XMVector3Length(p1 - p2));
-			vertices[i + n].texcoord.y = vertices[i].position.z + (n / 2.0f) + distance;
-			if (distance > 1.0f)
-			{
-				//for (int j = i + n; j < datapoints; j += n)
-				//{
-				//	//vertices[j].texcoord.y += (vertices[j].texcoord.y - vertices[j - n].texcoord.y) * distance;
-				//	vertices[j].texcoord.y = (vertices[j].position.z + n / 2.0f) * distance;
-				//}
-				//vertices[i].texcoord.y -= 0.5f * distance;
-				//vertices[i + n].texcoord.y += 0.5f*distance;
-			}
-		}
+		//if ((i + 1) % n > i && i + 1 < datapoints)
+		//{
+		//	XMVECTOR p1 = XMLoadFloat3(&vertices[i].position);
+		//	XMVECTOR p2 = XMLoadFloat3(&vertices[i + 1].position);
+		//	float distance = XMVectorGetX(XMVector3Length(p1 - p2));
+		//	vertices[i + 1].texcoord.x = vertices[i].position.x + (n / 2.0f) + distance;
+		//	//if (distance > 1.1f)
+		//	//{
+		//	//	for (int j = 0; j < n - ((i + 1) % n); ++j)
+		//	//	{
+		//	//		vertices[j + i + 1].texcoord.x += distance - 1.0f;
+		//	//	}
+		//	//}
+		//}
+		//if (i + n < datapoints)
+		//{
+		//	XMVECTOR p1 = XMLoadFloat3(&vertices[i].position);
+		//	XMVECTOR p2 = XMLoadFloat3(&vertices[i + n].position);
+		//	float distance = XMVectorGetX(XMVector3Length(p1 - p2));
+		//	vertices[i + n].texcoord.y = vertices[i].position.z + (n / 2.0f) + distance;
+		//	if (distance > 1.0f)
+		//	{
+		//		//for (int j = i + n; j < datapoints; j += n)
+		//		//{
+		//		//	//vertices[j].texcoord.y += (vertices[j].texcoord.y - vertices[j - n].texcoord.y) * distance;
+		//		//	vertices[j].texcoord.y = (vertices[j].position.z + n / 2.0f) * distance;
+		//		//}
+		//		//vertices[i].texcoord.y -= 0.5f * distance;
+		//		//vertices[i + n].texcoord.y += 0.5f*distance;
+		//	}
+		//}
 		
 	}
 
@@ -400,7 +398,7 @@ float MeshManager::_Sample3x3(float * heightmap, unsigned x, unsigned z, const s
 	{
 		for (int j = -1; j < 2; ++j)
 		{
-			int index = (x + i)*n + (z + j);
+			unsigned index = (x + i)*n + (z + j);
 			if (index >= 0 && index < max)
 			{
 				sum += heightmap[index];

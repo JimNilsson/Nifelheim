@@ -19,6 +19,7 @@ enum VertexShaders
 	VS_STATIC_MESHES,
 	VS_STATIC_MESHES_INSTANCED,
 	VS_FULLSCREEN,
+	VS_SKYBOX,
 	VS_COUNT
 };
 
@@ -32,6 +33,7 @@ enum PixelShaders
 {
 	PS_STATIC_MESHES,
 	PS_FINAL,
+	PS_SKYBOX,
 	PS_COUNT
 };
 
@@ -60,7 +62,14 @@ enum ConstantBuffers
 	CB_PER_OBJECT,
 	CB_PER_INSTANCE,
 	CB_LIGHTBUFFER,
+	CB_SKYBOX,
 	CB_COUNT
+};
+
+enum DSStates
+{
+	DS_LESS_EQUAL,
+	DS_COUNT
 };
 
 enum Samplers
@@ -76,16 +85,22 @@ enum RasterizerStates
 	RS_WIREFRAME,
 	RS_COUNT
 };
-#define MAX_POINTLIGHTS 512U
+
 struct LightBuffer
 {
-	PointLight pointLights[512];
+	PointLight pointLights[MAX_POINTLIGHTS];
+	DirectionalLight dirLights[MAX_DIRLIGHTS];
 	unsigned pointLightCount;
-	float pad;
+	unsigned dirLightCount;
+	float pad1;
 	float pad2;
-	float pad3;
 };
 
+struct SkyBuffer
+{
+	DirectX::XMFLOAT4 Campos;
+	DirectX::XMFLOAT4X4 ViewProj;
+};
 
 struct DepthBuffer
 {
@@ -115,6 +130,8 @@ private:
 	ID3D11RenderTargetView*   _renderTargetViews[RenderTargets::RT_COUNT] = { nullptr };
 	ID3D11ShaderResourceView* _shaderResourceViews[RenderTargets::RT_COUNT] = { nullptr }; //related to deferred
 	ID3D11Texture2D*          _renderTargetTextures[RenderTargets::RT_COUNT] = { nullptr };
+
+	ID3D11DepthStencilState* _depthStencilStates[DSStates::DS_COUNT] = { nullptr };
 	
 	std::vector<ID3D11ShaderResourceView*> _textures; //diffuse maps, normal maps, etc.
 	std::vector<ID3D11Buffer*> _vertexBuffers;
@@ -127,10 +144,13 @@ private:
 
 	void _CreateShadersAndInputLayouts();
 	void _CreateDepthBuffer();
+	void _CreateDepthStencilState();
 	void _CreateSamplerState();
 	void _CreateViewPort();
 	void _CreateRasterizerState();
 	void _CreateConstantBuffers();
+
+	int fuckballer;
 
 
 public:
@@ -142,6 +162,7 @@ public:
 	int CreateVertexBuffer(Vertex* vertexData, unsigned vertexCount);
 	int CreateIndexBuffer(unsigned* indexData, unsigned indexCount);
 	int CreateTexture(const wchar_t* filename);
+	int CreateTextureCube(const wchar_t* filename);
 
 	void Draw();
 	

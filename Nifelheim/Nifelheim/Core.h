@@ -10,6 +10,7 @@
 #include "TextureManager.h"
 #include "InputManager.h"
 #include "LightManager.h"
+#include "AudioManager.h"
 #include "Timer.h"
 
 typedef int ObjectID;
@@ -29,6 +30,7 @@ private:
 	TextureManager* _textureManager;
 	InputManager* _inputManager;
 	LightManager* _lightManager;
+	AudioManager* _audioManager;
 
 	Timer* _timer;
 	std::vector<GameObject> _gameObjects;
@@ -49,6 +51,7 @@ public:
 	TextureManager* GetTextureManager() const;
 	InputManager* GetInputManager() const;
 	LightManager* GetLightManager() const;
+	AudioManager* GetAudioManager() const;
 	Timer* GetTimer() const;
 
 	const int CreateGameObject();
@@ -56,15 +59,7 @@ public:
 
 	const std::vector<GameObject>& GetGameObjects() const;
 
-	void GetRenderJobs(std::vector<RenderJob>& renderjobs) const;
-
 	void GetRenderBatches(std::vector<Batch>& meshbatches) const;
-
-
-
-
-
-	
 };
 
 

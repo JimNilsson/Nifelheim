@@ -6,6 +6,10 @@
 #include <vector>
 #include <unordered_map>
 #include <SDL_keycode.h>
+
+#define MAX_POINTLIGHTS 64U
+#define MAX_DIRLIGHTS 8U
+
 struct Vertex
 {
 	DirectX::XMFLOAT3 position;
@@ -90,7 +94,7 @@ enum TextureTypes
 
 struct Textures
 {
-	int textures[TextureTypes::TT_COUNT] = { -1 };
+	int textures[TextureTypes::TT_COUNT] = { -1, -1, -1, -1 };
 	bool operator==(const Textures& rhs)
 	{
 		for (int i = 0; i < TextureTypes::TT_COUNT; ++i)
@@ -164,6 +168,7 @@ enum Components
 	MATERIAL,
 	TEXTURES,
 	LIGHTSOURCE,
+	AUDIO,
 	COMPONENT_COUNT
 };
 
@@ -285,10 +290,18 @@ struct PointLight
 	float intensity = 0;
 };
 
+struct DirectionalLight
+{
+	DirectX::XMFLOAT3 direction = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float intensity = 1.0f;
+	DirectX::XMFLOAT3 color = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float pad = 0.0f;
+};
 
 struct LightComponent
 {
 	int pointLight = -1;
+	int dirLight = -1;
 };
 
 #endif

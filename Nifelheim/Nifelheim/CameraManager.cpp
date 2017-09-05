@@ -11,14 +11,14 @@ CameraManager::CameraManager()
 	float width = (float)core->GetWindow()->GetWidth();
 	float height = (float)core->GetWindow()->GetHeight();
 	float aspectRatio = width / height;
-	float fov = 85.0f * 180.0f / XM_PI;
+	float fov = XM_PI / 2.0f;
 	Camera defaultCam;
 	defaultCam.aspectRatio = aspectRatio;
 	defaultCam.fov = fov;
 	defaultCam.forward = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	defaultCam.up = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	defaultCam.nearPlane = 0.1f;
-	defaultCam.farPlane = 100.0f;
+	defaultCam.farPlane = 200.0f;
 	defaultCam.position = XMFLOAT3(0.0f, 0.0f, -11.0f);
 	_cameras.push_back(defaultCam);
 
@@ -159,4 +159,19 @@ DirectX::XMMATRIX CameraManager::GetProj() const
 		_cameras[_activeCamera].aspectRatio,
 		_cameras[_activeCamera].nearPlane,
 		_cameras[_activeCamera].farPlane);
+}
+
+DirectX::XMFLOAT3 CameraManager::GetPosition() const
+{
+	return _cameras[_activeCamera].position;
+}
+
+DirectX::XMFLOAT3 CameraManager::GetForward() const
+{
+	return _cameras[_activeCamera].forward;
+}
+
+DirectX::XMFLOAT3 CameraManager::GetUp() const
+{
+	return _cameras[_activeCamera].up;
 }

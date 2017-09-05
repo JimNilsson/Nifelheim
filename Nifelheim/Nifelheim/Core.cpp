@@ -7,6 +7,10 @@ Core* Core::_instance = nullptr;
 
 Core::Core()
 {
+	if (SDL_Init(0) < 0)
+	{
+		throw(std::runtime_error("COuld not init SDL"));
+	}
 	_window = nullptr;
 	_d3d11 = nullptr;
 	_meshManager = nullptr;
@@ -15,10 +19,11 @@ Core::Core()
 	_textureManager = nullptr;
 	_inputManager = nullptr;
 	_timer = nullptr;
+	_audioManager = nullptr;
 }
 Core::~Core()
 {
-
+	SDL_Quit();
 }
 unsigned Core::FindObjectIndex(ObjectID id)
 {
@@ -56,6 +61,7 @@ Core* Core::GetInstance()
 
 void Core::ShutDown()
 {
+	SAFE_DELETE(Core::GetInstance()->_audioManager);
 	SAFE_DELETE(Core::GetInstance()->_window);
 	SAFE_DELETE(Core::GetInstance()->_d3d11);
 	SAFE_DELETE(Core::GetInstance()->_meshManager);
@@ -65,13 +71,14 @@ void Core::ShutDown()
 	SAFE_DELETE(Core::GetInstance()->_inputManager);
 	SAFE_DELETE(Core::GetInstance()->_lightManager);
 	SAFE_DELETE(Core::GetInstance()->_timer);
+
 	delete _instance;
 	_instance = nullptr;
 }
 
 void Core::Init(uint32_t width, uint32_t height, bool fullscreen)
 {
-	_window = new Window();
+	_window = new Window(width, height, fullscreen);
 	_d3d11 = new Direct3D11();
 	_meshManager = new MeshManager();
 	_cameraManager = new CameraManager();
@@ -80,6 +87,7 @@ void Core::Init(uint32_t width, uint32_t height, bool fullscreen)
 	_inputManager = new InputManager();
 	_lightManager = new LightManager();
 	_timer = new Timer();
+	_audioManager = new AudioManager();
 
 }
 
@@ -130,6 +138,11 @@ LightManager * Core::GetLightManager() const
 	return _lightManager;
 }
 
+AudioManager * Core::GetAudioManager() const
+{
+	return _audioManager;
+}
+
 Timer * Core::GetTimer() const
 {
 	return _timer;
@@ -161,59 +174,6 @@ const std::vector<GameObject>& Core::GetGameObjects() const
 	return _gameObjects;
 }
 
-void Core::GetRenderJobs(std::vector<RenderJob>& renderjobs) const
-{
-	
-
-	unsigned highestVBIndex = 0;
-	for (const auto &o : _gameObjects)
-	{
-		if (o.components[Components::MESH] > highestVBIndex)
-			highestVBIndex = o.components[Components::MESH];
-	}
-	++highestVBIndex;
-	unsigned* nrOfEach = new unsigned[highestVBIndex];
-	memset(nrOfEach, 0, sizeof(unsigned) * highestVBIndex);
-	for (const auto &o : _gameObjects)
-	{
-		if (o.components[Components::MESH] >= 0)
-			++nrOfEach[o.components[Components::MESH]];
-	}
-
-	std::vector<std::vector<RenderJob>> rjs(highestVBIndex);
-	unsigned totalRenderJobs = 0;
-	for (int i = 0; i < highestVBIndex; ++i)
-	{
-		rjs[i].reserve(nrOfEach[i]);
-		totalRenderJobs += nrOfEach[i];
-	}
-	delete[] nrOfEach;
-	for (const auto &o : _gameObjects)
-	{
-		if (o.components[Components::MESH] >= 0)
-		{
-			RenderJob rj;
-			rj.mesh = _meshManager->GetMesh(o.components[Components::MESH]);
-			if (o.components[Components::TRANSFORM] >= 0)
-			{
-				rj.transform = _transformManager->GetWorld(o.components[Components::TRANSFORM]);
-			}
-			if (o.components[Components::TEXTURES] >= 0)
-			{
-				rj.textures = _textureManager->GetTextures(o.components[Components::TEXTURES]);
-			}
-			rjs[rj.mesh.vertexBuffer].push_back(rj);
-			//renderjobs.push_back(rj);
-		}
-	}
-	renderjobs.resize(totalRenderJobs);
-	unsigned index = 0;
-	for (const auto& i : rjs)
-	{
-		memcpy(&renderjobs[index], &i[0], sizeof(RenderJob) * i.size());
-		index += i.size();
-	}
-}
 
 void Core::GetRenderBatches(std::vector<Batch>& meshbatches) const
 {

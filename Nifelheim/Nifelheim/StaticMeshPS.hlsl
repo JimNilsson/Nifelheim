@@ -36,7 +36,7 @@ PS_OUT main(VS_OUT input)
 
 	
 	output.Diffuse = DiffuseMap.Sample(AniSam, input.tex);
-	output.Diffuse.a = 1.0f;
+	output.Diffuse.a = 0.8f;
 	//output.Normal = float4((input.tbn[2] + 1.0f) * 0.5f, 0.0f);
 	input.tbn[0] = normalize(input.tbn[0]);
 	input.tbn[1] = normalize(input.tbn[1]);
@@ -48,7 +48,7 @@ PS_OUT main(VS_OUT input)
 	normal = normalize(mul(normal, input.tbn));
 	normal = (normal + 1.0f) * 0.5f;
 	output.Normal.rgb = normal;
-	output.Normal.a = 1.0f;
+	output.Normal.a = 0.0f;
 	//output.Normal.a = Metallic.Sample(AniSam, input.tex);
 	//output.Diffuse.rgb = DiffuseMap.Sample(AniSam, input.tex);
 	//output.Diffuse.a = Roughness.Sample(AniSam, input.tex);
