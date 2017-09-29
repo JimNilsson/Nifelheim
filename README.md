@@ -1,3 +1,3 @@
 # Nifelheim
-An attempt at a rendering engine to have something to work with over the summer. It is more of a learning experience rather than something that will actually be useful. 
+Mostly a testing grounds for various stuff related to 3D rendering and other game related things.
  
